@@ -35,7 +35,7 @@ export default function AboutPage() {
         </div>
       </Reveal>
       <Reveal delay={0.12}>
-        <div className="mt-14 rounded-2xl border border-edge bg-surface p-7 sm:p-9">
+        <div className="mt-14 rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
           <h2 className="text-xl font-medium">Get in touch</h2>
           <p className="mt-2 max-w-[32rem] leading-relaxed text-fg-mid">
             Questions, feedback, or want your team in the beta?

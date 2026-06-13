@@ -173,15 +173,25 @@ Surface Raised fill, 10px radius, 1px Border; focus shifts border to Signal Blue
 
 ## 6. Motion
 
-Motion is reveal choreography, nothing else. Library: Framer Motion (`motion` package).
+Motion is reveal choreography, with two named light-source exceptions (below). Library: Framer Motion (`motion` package). Tokens centralize in `lib/motion.ts`.
 
 - **Entrance reveals:** `whileInView`, once only, 24px rise + fade, 0.6s, ease `cubic-bezier(0.22, 1, 0.36, 1)` (ease-out-quint family). Staggered children at 90ms.
-- **Hero:** one orchestrated load sequence (headline → subhead → CTAs → device), same curve, total under 1.2s.
-- **Micro:** hovers and focus at 150ms ease-out. No bounce, no elastic, no infinite loops, no parallax depth stacks.
-- **Reduced motion:** `prefers-reduced-motion` collapses all reveals to instant visibility (no transforms, no opacity choreography). This is a hard requirement, not a nice-to-have.
+- **Scroll-linked product reveals:** device frames are bound to their own scroll progress (`useScroll` target + offset), rising 28→0px and scaling 0.95→1 on a settle spring while their backlight glow brightens 0→1 opacity, so the console lights up as it enters view. The glow is the existing `.backlight` light source, opacity-driven only. (`components/reveal-phone.tsx`)
+- **Hero:** one orchestrated load sequence (kicker → headline words, staggered → subhead → CTAs → device), same curve, total under 1.2s.
+- **Scroll-progress line:** a 2px Signal-Blue bar at the top of the viewport, `scaleX` bound to page scroll. (`components/scroll-progress.tsx`)
+- **Roadmap spine draw:** a Signal-Blue line fills downward over the gray hairline, `scaleY` bound to the list's scroll progress; nodes pop in on entry. (`components/timeline.tsx`)
+- **Page transition:** routes fade + rise 8px in, keyed on pathname, enter-only (no blocking exit). (`components/page-transition.tsx`)
+- **Micro:** hovers and focus at 150–200ms ease-out (link arrow nudge, card border tint toward Signal Blue Dim). No bounce, no elastic, no infinite loops, no parallax depth stacks. Buttons stay color-only on hover.
+- **Reduced motion:** `prefers-reduced-motion` collapses everything to static: reveals instant, scroll-links and the spine fully drawn/lit, the progress bar and breathing canvas absent (static `.backlight` fallback), tilt off, page transition off, CSS transitions neutralized in `globals.css`. This is a hard requirement, not a nice-to-have.
 
 ### Named Rules
-**The Delivery Rule.** Every animation delivers content into view or acknowledges input. Ambient motion (floating orbs, drifting gradients, marquee strips) is banned.
+**The Delivery Rule.** Every animation delivers content into view or acknowledges input, with exactly two sanctioned exceptions below. Ambient motion (floating orbs, drifting gradients, marquee strips) is otherwise banned.
+
+**The Living Light Exception.** Behind the hero device, the single backlight may be a slow breathing canvas glow (intensity + radius oscillating on an ~8s sine with a few px of drift; `components/backlight-canvas.tsx`). It is a light source, not decoration: one per viewport, behind real imagery, never paint/text/border. Reduced motion or no-canvas falls back to the static `.backlight`.
+
+**The Hero Tilt Exception.** The hero device may lean a few degrees toward the cursor (`rotateX ±4°` / `rotateY ±6°`, spring-settled; `components/tilt.tsx`), as if catching the backlight. Bounded to the hero artifact and to fine pointers at desktop widths; touch, coarse pointers, small viewports, and reduced motion get a static device.
+
+These two exceptions are deliberate and bounded. They do not license general ambient motion elsewhere; new effects still answer to the Delivery Rule.
 
 ## 7. Do's and Don'ts
 
@@ -198,4 +208,4 @@ Motion is reveal choreography, nothing else. Library: Framer Motion (`motion` pa
 - **Don't** invent stats, testimonials, or adoption numbers.
 - **Don't** ship the corporate landing template: hero metric, logo wall, identical icon-card grids.
 - **Don't** use pure #000 or #fff, colored side-stripes, or nested cards.
-- **Don't** animate anything the user didn't scroll to or interact with.
+- **Don't** animate anything the user didn't scroll to or interact with, except the two sanctioned light-source exceptions in §6 (the breathing hero backlight and hero tilt).
