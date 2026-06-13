@@ -25,7 +25,7 @@ export default function EarlyAccessPage() {
 
       <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
         <Reveal delay={0.08}>
-          <section className="h-full rounded-2xl border border-edge bg-surface p-7 sm:p-9">
+          <section className="h-full rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
             <h2 className="text-xl font-medium">Get the launch email</h2>
             <p className="mt-3 leading-relaxed text-fg-mid">
               One email when the TestFlight beta opens, one when FTC Flow hits

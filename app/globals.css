@@ -46,3 +46,19 @@ body {
     transparent 72%
   );
 }
+
+/*
+ * Reduced-motion safety net for CSS-level transitions (hover tints, the arrow
+ * nudge). JS-driven motion is gated separately by useReducedMotion. This is a
+ * hard requirement: with reduced motion on, the site is fully static.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

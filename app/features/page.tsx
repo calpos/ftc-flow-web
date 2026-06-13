@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Phone } from "@/components/phone";
 import { Reveal } from "@/components/reveal";
+import { RevealPhone } from "@/components/reveal-phone";
 import { shots } from "@/lib/screenshots";
 import type { Screenshot } from "@/lib/screenshots";
 import { buttonPrimary } from "@/lib/ui";
@@ -15,22 +16,24 @@ export const metadata: Metadata = {
 
 type ShotPair = readonly [Screenshot] | readonly [Screenshot, Screenshot];
 
-function PhoneCluster({ pair, glow }: { pair: ShotPair; glow?: boolean }) {
+function PhoneCluster({ pair, flip }: { pair: ShotPair; flip?: boolean }) {
+  const orderClass = flip ? "md:order-1" : "";
   if (pair.length === 1) {
     return (
-      <div className="relative isolate mx-auto w-[min(72vw,300px)]">
-        {glow ? (
-          <div aria-hidden className="backlight absolute -inset-[20%] -z-10" />
-        ) : null}
+      <RevealPhone
+        className={`mx-auto w-[min(72vw,300px)] ${orderClass}`}
+        glowClassName="-inset-[20%]"
+      >
         <Phone shot={pair[0]} sizes="(min-width: 768px) 300px, 72vw" />
-      </div>
+      </RevealPhone>
     );
   }
   return (
-    <div className="relative isolate mx-auto flex w-full max-w-[520px] justify-center gap-5">
-      {glow ? (
-        <div aria-hidden className="backlight absolute -inset-[12%] -z-10" />
-      ) : null}
+    <RevealPhone
+      className={`mx-auto w-full max-w-[520px] ${orderClass}`}
+      contentClassName="flex justify-center gap-5"
+      glowClassName="-inset-[12%]"
+    >
       <Phone
         shot={pair[0]}
         className="w-[46%]"
@@ -41,7 +44,7 @@ function PhoneCluster({ pair, glow }: { pair: ShotPair; glow?: boolean }) {
         className="mt-12 w-[46%]"
         sizes="(min-width: 768px) 240px, 42vw"
       />
-    </div>
+    </RevealPhone>
   );
 }
 
@@ -51,7 +54,6 @@ type FeatureSectionProps = {
   points?: readonly string[];
   pair: ShotPair;
   flip?: boolean;
-  glow?: boolean;
 };
 
 function FeatureSection({
@@ -60,7 +62,6 @@ function FeatureSection({
   points,
   pair,
   flip = false,
-  glow = false,
 }: FeatureSectionProps) {
   return (
     <section>
@@ -95,9 +96,7 @@ function FeatureSection({
             ) : null}
           </div>
         </Reveal>
-        <Reveal delay={0.12} className={flip ? "md:order-1" : undefined}>
-          <PhoneCluster pair={pair} glow={glow} />
-        </Reveal>
+        <PhoneCluster pair={pair} flip={flip} />
       </div>
     </section>
   );
@@ -128,7 +127,6 @@ export default function FeaturesPage() {
           "Your tasks and projects with live progress",
         ]}
         pair={[shots.home1, shots.home2]}
-        glow
       />
 
       <FeatureSection

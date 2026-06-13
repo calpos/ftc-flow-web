@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Hero } from "@/components/hero";
 import { Phone } from "@/components/phone";
 import { Reveal } from "@/components/reveal";
+import { RevealPhone } from "@/components/reveal-phone";
 import { shots } from "@/lib/screenshots";
 import type { Screenshot } from "@/lib/screenshots";
 import { buttonPrimary } from "@/lib/ui";
@@ -34,12 +35,11 @@ function Teaser({ title, body, shot, flip = false }: TeaserProps) {
             {body}
           </p>
         </Reveal>
-        <Reveal
-          delay={0.12}
+        <RevealPhone
           className={`mx-auto w-[min(72vw,300px)] ${flip ? "md:order-1" : ""}`}
         >
           <Phone shot={shot} />
-        </Reveal>
+        </RevealPhone>
       </div>
     </section>
   );
@@ -86,7 +86,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/about"
-              className="mt-6 inline-flex items-center gap-1.5 font-medium text-signal transition-colors duration-150 hover:text-[#5ba4ff]"
+              className="group mt-6 inline-flex items-center gap-1.5 font-medium text-signal transition-colors duration-150 hover:text-[#5ba4ff]"
             >
               Read the story
               <svg
@@ -97,7 +97,7 @@ export default function HomePage() {
                 strokeWidth="1.75"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="size-4"
+                className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-1"
               >
                 <path d="M3 8h10M9 4l4 4-4 4" />
               </svg>

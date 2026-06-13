@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
+import { PageTransition } from "@/components/page-transition";
+import { ScrollProgress } from "@/components/scroll-progress";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -48,9 +50,10 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        <ScrollProgress />
         <Nav />
         <main id="main" className="flex-1">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
         <Footer />
       </body>
