@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  /* The Quiet Console palette, inherited from the FTC Flow app */
+  --color-ink: #0a0a0f;
+  --color-surface: #14141c;
+  --color-raised: #1e1e2a;
+  --color-edge: #1c1c28;
+  --color-signal: #2d8cff;
+  --color-signal-dim: #1a3a5c;
+  --color-fg: #f0f0f5;
+  --color-fg-mid: #a0a0b0;
+  --color-fg-dim: #85869a;
+  --color-success: #34c759;
+  --color-warning: #ff9f0a;
+  --color-danger: #ff453a;
+}
+
+@theme inline {
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-fg);
+}
+
+::selection {
+  background-color: var(--color-signal-dim);
+  color: var(--color-fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+/*
+ * The one sanctioned glow: a radial light source rendered BEHIND product
+ * imagery or a hero, never as box-shadow on an element. One per viewport.
+ */
+.backlight {
+  background: radial-gradient(
+    closest-side,
+    rgba(45, 140, 255, 0.16),
+    transparent 72%
+  );
+}
