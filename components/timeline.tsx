@@ -1,0 +1,107 @@
+"use client";
+
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useSpring } from "motion/react";
+import { Reveal } from "@/components/reveal";
+import { Spotlight } from "@/components/spotlight";
+import { EASE } from "@/lib/motion";
+import { monoLabel } from "@/lib/ui";
+
+export type Phase = {
+  label: string;
+  title: string;
+  body: string;
+  current?: boolean;
+  /** Mono chips rendered under the body, e.g. what ships in a phase. */
+  chips?: readonly string[];
+};
+
+/**
+ * The roadmap spine draws itself: a Signal-Blue line fills downward over the
+ * gray hairline as you scroll the list, and each phase node pops into view on
+ * entry. Reduced motion: the calm gray hairline, nodes static.
+ */
+export function Timeline({ phases }: { phases: readonly Phase[] }) {
+  const reduceMotion = useReducedMotion();
+  const ref = useRef<HTMLOListElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.8", "end 0.65"],
+  });
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    mass: 0.5,
+  });
+
+  return (
+    <ol ref={ref} className="relative ml-2 mt-16 border-l border-edge">
+      {!reduceMotion ? (
+        <motion.span
+          aria-hidden
+          style={{ scaleY }}
+          className="absolute -left-px top-0 h-full w-px origin-top bg-signal"
+        />
+      ) : null}
+
+      {phases.map((phase, index) => (
+        <li key={phase.label} className="relative pb-14 pl-8 last:pb-0">
+          {reduceMotion ? (
+            <span
+              aria-hidden
+              className={`absolute -left-[7px] top-1.5 size-3.5 rounded-full border-2 ${
+                phase.current
+                  ? "border-signal-dim bg-signal"
+                  : "border-edge bg-ink"
+              }`}
+            />
+          ) : (
+            <motion.span
+              aria-hidden
+              initial={{ scale: 0.4, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true, margin: "0px 0px -20% 0px" }}
+              transition={{ duration: 0.4, ease: EASE }}
+              className={`absolute -left-[7px] top-1.5 size-3.5 rounded-full border-2 ${
+                phase.current
+                  ? "border-signal-dim bg-signal"
+                  : "border-edge bg-ink"
+              }`}
+            />
+          )}
+          <Reveal delay={index * 0.05}>
+            <Spotlight className="rounded-[16px] border border-edge bg-surface p-6 transition-colors duration-200 hover:border-signal-dim sm:p-7">
+              <p
+                className={`${monoLabel} ${
+                  phase.current ? "text-signal" : "text-fg-dim"
+                }`}
+              >
+                {phase.label}
+                {phase.current ? " · In progress" : null}
+              </p>
+              <h2 className="mt-2.5 text-2xl font-medium tracking-[-0.01em]">
+                {phase.title}
+              </h2>
+              <p className="mt-3 max-w-[36rem] leading-relaxed text-fg-mid">
+                {phase.body}
+              </p>
+              {phase.chips ? (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {phase.chips.map((chip) => (
+                    <span
+                      key={chip}
+                      className="rounded-md border border-edge bg-raised px-3 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-fg-mid"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </Spotlight>
+          </Reveal>
+        </li>
+      ))}
+    </ol>
+  );
+}

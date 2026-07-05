@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { buttonPrimary } from "@/lib/ui";
+import { buttonPrimary, monoLabel } from "@/lib/ui";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -54,7 +54,10 @@ export function SubscribeForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <label htmlFor="subscribe-email" className="block text-sm font-medium">
+      <label
+        htmlFor="subscribe-email"
+        className={`${monoLabel} block text-fg-dim`}
+      >
         Email
       </label>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row">

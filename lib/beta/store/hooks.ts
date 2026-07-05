@@ -1,0 +1,71 @@
+"use client";
+
+import { useMemo } from "react";
+import { useAppStore } from "@/lib/beta/store/appStore";
+
+/**
+ * Convenience hook mirroring the app's useApp(): exposes all store state and
+ * actions plus the computed currentUser. Each field is selected individually
+ * so references stay stable (no Zustand re-render loops). For fine-grained
+ * subscriptions, select directly from useAppStore instead.
+ */
+export function useApp() {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const members = useAppStore((s) => s.members);
+  const tasks = useAppStore((s) => s.tasks);
+  const taskItems = useAppStore((s) => s.taskItems);
+  const polls = useAppStore((s) => s.polls);
+  const events = useAppStore((s) => s.events);
+  const isLoading = useAppStore((s) => s.isLoading);
+
+  const setUser = useAppStore((s) => s.setUser);
+  const updateMember = useAppStore((s) => s.updateMember);
+  const addTask = useAppStore((s) => s.addTask);
+  const updateTask = useAppStore((s) => s.updateTask);
+  const deleteTask = useAppStore((s) => s.deleteTask);
+  const updateProjectWithCascade = useAppStore((s) => s.updateProjectWithCascade);
+  const addTaskItem = useAppStore((s) => s.addTaskItem);
+  const updateTaskItem = useAppStore((s) => s.updateTaskItem);
+  const deleteTaskItem = useAppStore((s) => s.deleteTaskItem);
+  const addPoll = useAppStore((s) => s.addPoll);
+  const updatePoll = useAppStore((s) => s.updatePoll);
+  const deletePoll = useAppStore((s) => s.deletePoll);
+  const votePoll = useAppStore((s) => s.votePoll);
+  const setPollOpen = useAppStore((s) => s.setPollOpen);
+  const addEvent = useAppStore((s) => s.addEvent);
+  const updateEvent = useAppStore((s) => s.updateEvent);
+  const deleteEvent = useAppStore((s) => s.deleteEvent);
+
+  const currentUser = useMemo(
+    () => members.find((m) => m.id === currentUserId) ?? null,
+    [members, currentUserId],
+  );
+
+  return {
+    currentUserId,
+    currentUser,
+    members,
+    tasks,
+    taskItems,
+    polls,
+    events,
+    isLoading,
+    setUser,
+    updateMember,
+    addTask,
+    updateTask,
+    deleteTask,
+    updateProjectWithCascade,
+    addTaskItem,
+    updateTaskItem,
+    deleteTaskItem,
+    addPoll,
+    updatePoll,
+    deletePoll,
+    votePoll,
+    setPollOpen,
+    addEvent,
+    updateEvent,
+    deleteEvent,
+  };
+}

@@ -18,9 +18,9 @@ colors:
 typography:
   hero:
     fontFamily: "IBM Plex Sans, sans-serif"
-    fontSize: "clamp(2.5rem, 6vw, 4.5rem)"
+    fontSize: "clamp(2.75rem, 6.5vw, 5rem)"
     fontWeight: 600
-    lineHeight: 1.05
+    lineHeight: 1.04
     letterSpacing: "-0.03em"
   display:
     fontFamily: "IBM Plex Sans, sans-serif"
@@ -45,11 +45,11 @@ typography:
     fontWeight: 400
     lineHeight: 1.65
   label:
-    fontFamily: "IBM Plex Sans, sans-serif"
+    fontFamily: "IBM Plex Mono, monospace"
     fontSize: "0.75rem"
     fontWeight: 500
     lineHeight: 1.2
-    letterSpacing: "0.08em"
+    letterSpacing: "0.14em"
 rounded:
   sm: "6px"
   md: "10px"
@@ -92,13 +92,16 @@ components:
 
 The website lives in the same near-black world as the app, but it has a different job. The app is a quiet tool a student checks for fifteen seconds; the site is a pitch that has to earn a forward. So the site keeps the app's discipline (three tonal layers, 1px hairlines, one blue voice, IBM Plex Sans) and adds what the app forbids itself: scale, light, and motion. Display type gets large. Sections reveal as you scroll. And Signal Blue, which in the app is only ever paint, is allowed on the web to behave like a light source: a soft radial glow rising behind a phone, a faint tint bleeding off a section edge.
 
-The discipline is what keeps the cinema from becoming slop. Every glow backlights a real screenshot. Every reveal delivers a real screen. The palette never grows; the blue never becomes a gradient ramp or a text fill; the neutrals stay cool and blue-tinted. A visitor should feel they are looking at the app's world from outside, at night, with the console glowing.
+The discipline is what keeps the cinema from becoming slop. Every glow backlights a real screenshot. Every reveal delivers a real screen. The palette never grows; the blue never becomes a text fill, and the only gradient ramp it is allowed is physical light temperature inside the hero nebula (§6). The neutrals stay cool and blue-tinted. A visitor should feel they are looking at the app's world from outside, at night, with the console glowing.
+
+The 2026 "turned up" revision added two layers without changing the world: **light got an engine** (a WebGL light field behind the hero, with a documented fallback ladder) and **the void got a chassis** (the Substrate: faint engineering grid, film grain, hairline section rules, and a mono detail voice). The darkness now reads as designed structure, not empty space.
 
 **Key Characteristics:**
 - Same world as the app: near-black tonal layers, 1px borders, one blue voice, Plex.
-- Backlit, not decorated: glow exists only as a light source behind product imagery or the hero.
+- Backlit, not decorated: light behaves as light sources behind or around product imagery.
+- Structured, not empty: the Substrate (grid, grain, hairlines, mono details) fills the void quietly.
 - Big type, plain words: hero display at clamp scale, copy that reads like a competent teammate.
-- Motion as reveal: ease-out entrances that deliver content, never ambient animation.
+- Motion as delivery: entrances and scroll choreography that bring real screens into view.
 - Honest pre-launch surfaces: disabled states say "coming soon" and mean it.
 
 ## 2. Colors
@@ -117,15 +120,17 @@ Inherited wholesale from the app's Quiet Console palette. The website adds exact
 - **Near-Black Ink** (#0A0A0F) canvas → **Surface** (#14141C) → **Surface Raised** (#1E1E2A), separated by **Border** (#1C1C28) hairlines. **Text Primary** (#F0F0F5) / **Secondary** (#A0A0B0) / **Tertiary** (#85869A).
 
 ### Named Rules
-**The One Voice Rule (inherited).** Signal Blue is the single voice. One primary CTA per viewport. If two blue elements compete, one is wrong.
+**The One Voice Rule (inherited).** Signal Blue is the single voice. One primary CTA per viewport. If two blue elements compete, one is wrong. The rotating hero word is the sanctioned inline emphasis.
 
-**The Light Source Rule.** Glow is light, not paint. It may appear as a soft radial gradient behind a device frame, behind the hero composition, or as a faint tint bleeding from a section boundary; at most one glow per viewport. It never appears as text color, button glow, card shadow, or border effect.
+**The Light Source Rule 2.0.** Glow is light, not paint. Each viewport has at most one **dominant** light (the hero light field, a device backlight, the CTA glow); dim supporting bleeds (`.bleed-top` / `.bleed-bottom`, 3–7% alpha washes at section boundaries) may accompany it. Light never appears as text color, button glow, card shadow, or border effect.
 
 **The No Pure Black Rule (inherited).** Darkest value #0A0A0F, lightest #F0F0F5. Every neutral tinted cool toward blue.
 
 ## 3. Typography
 
-**Font:** IBM Plex Sans via `next/font/google`, weights 400 / 500 / 600. This is identity preservation: the app shipped on Plex, and the site is the app's world. The web adds weight 600, reserved for hero and display sizes where Medium 500 goes slack at large scale.
+**Fonts:** IBM Plex Sans via `next/font/google`, weights 400 / 500 / 600, plus **IBM Plex Mono** 400 / 500 as the Detail Voice. This is identity preservation: the app shipped on Plex, and the site is the app's world. The web adds weight 600, reserved for hero and display sizes where Medium 500 goes slack at large scale.
+
+**The Detail Voice (Plex Mono).** Mono is the engineering annotation layer: kickers, step indices (`01`–`04`), timeline phase labels, form labels, footer meta, launch-date lines (`lib/ui.ts` `monoLabel`: 0.75rem, 500, +0.14em, uppercase). It never sets body copy, headings, or buttons; a surface with more than two mono moments in view is over-annotated.
 
 ### Hierarchy
 - **Hero** (600, clamp 2.5rem to 4.5rem, -0.03em): One per page, the opening statement.
@@ -133,7 +138,7 @@ Inherited wholesale from the app's Quiet Console palette. The website adds exact
 - **Headline** (500, clamp 1.5rem to 1.875rem): Feature section titles, card headers on /early-access.
 - **Title** (500, 1.125rem): Sub-feature names, nav-level emphasis.
 - **Body** (400, 1rem, line-height 1.65): Reading copy, capped at 65ch. Dark background, so line-height runs taller than the app's 1.4.
-- **Label** (500, 0.75rem, +0.08em, uppercase): Kickers and timeline phase markers only. Used as deliberate section grammar on /roadmap; elsewhere at most once per page.
+- **Label** (Plex Mono, 500, 0.75rem, +0.14em, uppercase): the Detail Voice. Kickers, indices, phase markers, form labels, meta lines. Deliberate section grammar sitewide, but small doses per viewport.
 
 ### Named Rules
 **The Scale Jump Rule.** Adjacent hierarchy steps keep a ≥1.25 size ratio. The site's drama lives in the jump from Body to Hero; flattening the scale kills the register.
@@ -144,10 +149,24 @@ Inherited wholesale from the app's Quiet Console palette. The website adds exact
 
 Flat tonal layering inherited from the app: canvas → Surface → Surface Raised, separated by 1px Border hairlines. No box-shadows on cards, buttons, or inputs.
 
-The website's single sanctioned departure is the **backlight**: a radial Signal Blue Glow positioned behind product imagery (device frames, screenshot clusters) or behind the hero. It is rendered as a background gradient on a positioned layer, never as `box-shadow` or `filter: drop-shadow` on the element itself.
+Light comes in three sanctioned forms, all rendered behind or around content, never as `box-shadow` or `filter: drop-shadow` on the element itself:
+
+- **The light field** (`components/light-field.tsx`): the hero's WebGL light source. See §6, Living Light 2.0.
+- **The backlight** (`.backlight`): a radial Signal Blue Glow behind product imagery (device frames, screenshot clusters) or a CTA composition. The dominant light of most viewports.
+- **Bleeds** (`.bleed-top` / `.bleed-bottom`): dim washes softening section boundaries. Supporting light only.
+
+### The Substrate
+
+The console's chassis (`components/substrate.tsx` + `globals.css`). Three static, aria-hidden texture layers that keep the Ink canvas from reading as an empty void:
+
+- **Engineering grid** (`.substrate-grid` + fade/top masks, `GridLayer`): 1px lines on a 56px module at ~5% cool alpha, always masked so it dissolves under content. Hero, section headers, footer, text bento cells.
+- **Film grain** (`.grain`, `Grain`): SVG turbulence tiled at 3.5% opacity, fixed over the whole page, above content, below nothing interactive.
+- **Section rules** (`SectionRule`): full-width hairlines with mono `+` ticks where they cross the content container. The home page's section punctuation.
+
+The Substrate is structure, not decoration: quiet enough to miss, missed when gone. It never animates.
 
 ### Named Rules
-**The Flat-By-Default Rule (inherited, amended).** Raise an element by stepping its tone and adding a hairline. The backlight is the only glow, it lives behind things, and there is at most one per viewport.
+**The Flat-By-Default Rule (inherited, amended).** Raise an element by stepping its tone and adding a hairline. Light lives behind things; one dominant light per viewport with dim bleeds in support. The Substrate is the only permitted texture, and it stays still.
 
 ## 5. Components
 
@@ -160,7 +179,13 @@ The website's single sanctioned departure is the **backlight**: a radial Signal 
 The site's hero artifact: a phone-shaped shell (Surface fill, 1px Border, ~36px outer radius, 10px padding) wrapping a `next/image` screenshot with ~28px inner radius. Sits above its backlight glow. Screenshots are real app captures at 904×1871; the frame never crops or distorts them.
 
 ### Section (rhythm)
-Pages are vertical sequences of full-width sections on the Ink canvas, `clamp(5rem, 10vw, 9rem)` vertical padding, content capped at a 72rem container. Feature sections alternate text/device sides on desktop and stack device-below-text on mobile. Depth between sections comes from an occasional Surface band, not dividers everywhere.
+Pages are vertical sequences of full-width sections on the Ink canvas, `clamp(5rem, 10vw, 9rem)` vertical padding, content capped at a 72rem container. The home page runs three distinct rhythms (walkthrough → bento → CTA) punctuated by SectionRules; /features alternates text/device sides. Depth between sections comes from bleeds and rules, not dividers everywhere.
+
+### Walkthrough (home signature)
+`components/walkthrough.tsx`. The device frame pins to the viewport (CSS sticky) while four steps scroll past on a spine rail; the screen crossfades to match the active step (IntersectionObserver center band). Step grammar: mono index → headline → body, inactive steps at 30% opacity, a Signal Blue spine filling with progress. Small viewports and reduced motion get the stacked version: alternating text/device sections, no pinning.
+
+### Bento (home secondary)
+`components/bento.tsx`. Varied cells on a 12-column grid, never identical: screenshot-crop cells (Surface fill, hairline, mono label + title + one line, bottom-masked crop, hover border tint + 1.025 image scale) and text cells (grid-textured, display type, arrow link). No shadows, no glow, no nested cards.
 
 ### Nav
 Sticky, Ink at ~80% opacity with backdrop blur (the one sanctioned blur: it is functional, keeping the sticky bar legible over scrolling content), 1px bottom Border hairline. Logo left; Features / Roadmap / About center-right; Get Early Access as the primary button. Active page link in Signal Blue. Mobile: hamburger to full-width panel on Surface.
@@ -173,22 +198,48 @@ Surface Raised fill, 10px radius, 1px Border; focus shifts border to Signal Blue
 
 ## 6. Motion
 
-Motion is reveal choreography, nothing else. Library: Framer Motion (`motion` package).
+Motion is reveal choreography, with two named light-source exceptions (below). Library: Framer Motion (`motion` package). Tokens centralize in `lib/motion.ts`.
 
 - **Entrance reveals:** `whileInView`, once only, 24px rise + fade, 0.6s, ease `cubic-bezier(0.22, 1, 0.36, 1)` (ease-out-quint family). Staggered children at 90ms.
-- **Hero:** one orchestrated load sequence (headline → subhead → CTAs → device), same curve, total under 1.2s.
-- **Micro:** hovers and focus at 150ms ease-out. No bounce, no elastic, no infinite loops, no parallax depth stacks.
-- **Reduced motion:** `prefers-reduced-motion` collapses all reveals to instant visibility (no transforms, no opacity choreography). This is a hard requirement, not a nice-to-have.
+- **Scroll-linked product reveals:** device frames are bound to their own scroll progress (`useScroll` target + offset), rising 28→0px and scaling 0.95→1 on a settle spring while their backlight glow brightens 0→1 opacity, so the console lights up as it enters view. The glow is the existing `.backlight` light source, opacity-driven only. (`components/reveal-phone.tsx`)
+- **Hero:** one orchestrated load sequence (kicker → headline words, staggered → subhead → CTAs → device), same curve, total under 1.2s.
+- **Rotating hero word:** the headline's closing word rolls vertically (exit up, enter from below) every 2.6s (`components/rotating-word.tsx`, tokens `ROTATE_HOLD` / `ROTATE_DURATION`). Width is reserved by an invisible sizer so the line never reflows; rotation pauses on hidden tabs; reduced motion renders the static closing phrase.
+- **Walkthrough choreography:** the pinned device crossfades screens (0.45s, opacity + 10px rise) as the active step changes; step text animates 0.3→1 opacity; the spine fills stepwise. All driven by the center-band IntersectionObserver, not raw scroll position, so it settles instead of scrubbing.
+- **Scroll-progress line:** a 2px Signal-Blue bar at the top of the viewport, `scaleX` bound to page scroll. (`components/scroll-progress.tsx`)
+- **Roadmap spine draw:** a Signal-Blue line fills downward over the gray hairline, `scaleY` bound to the list's scroll progress; nodes pop in on entry. (`components/timeline.tsx`)
+- **Page transition:** routes fade + rise 8px in, keyed on pathname, enter-only (no blocking exit). (`components/page-transition.tsx`)
+- **Micro:** hovers and focus at 150–200ms ease-out (link arrow nudge, card border tint toward Signal Blue Dim). No bounce, no elastic, no infinite loops, no parallax depth stacks. Buttons stay color-only on hover.
+- **Reduced motion:** `prefers-reduced-motion` collapses everything to static: reveals instant, scroll-links and the spine fully drawn/lit, the progress bar and breathing canvas absent (static `.backlight` fallback), tilt off, page transition off, CSS transitions neutralized in `globals.css`. This is a hard requirement, not a nice-to-have.
 
 ### Named Rules
-**The Delivery Rule.** Every animation delivers content into view or acknowledges input. Ambient motion (floating orbs, drifting gradients, marquee strips) is banned.
+**The Delivery Rule.** Every animation delivers content into view or acknowledges input, with exactly two sanctioned exceptions below. Ambient motion (floating orbs, drifting gradients, marquee strips) is otherwise banned.
+
+**The Living Light Exception 2.0.** The hero's dominant light is a WebGL nebula (`components/light-field.tsx`): domain-warped fractal noise (fbm fed through itself) producing flowing, cloud-like light structures with filmic contrast (crushed darks, luminous cores), massed around a slowly drifting focal point. The field leans toward and brightens near the cursor on fine pointers. Wattage stays low: it is a light source, not decoration; one dominant light per viewport, behind real content, never paint/text/border. Engineering guardrails: single draw call, DPR capped at 1.5, rAF paused offscreen and on hidden tabs, `powerPreference: "low-power"`, dithered against banding, plus a perf watchdog that auto-drops to the canvas-2D tier on sustained slow frames (40–250ms; slower cadences are window throttling and are ignored).
+
+**Light temperature (nebula only).** Within the light field, intensity maps to a narrow hue ramp inside the blue family: indigo shadows → Signal Blue → cyan cores. This is physical light behaving like light, not a palette expansion: UI paint, text, borders, and every other glow stay single-hue Signal Blue, and the ramp never appears outside the light field.
+
+**The fallback ladder** (in priority order):
+1. **WebGL light field** — the shipping default.
+2. **Canvas-2D breathing glow** (`components/backlight-canvas.tsx`, the original Living Light: ~8s sine breathing + drift) — automatic runtime fallback when WebGL is unavailable or the context is lost. *If real-hardware testing (school Chromebooks) shows the WebGL tier lagging, this tier is the designated replacement primary: swap by rendering `BacklightCanvas` where `LightField` mounts today.*
+3. **Static `.backlight`** — reduced motion, or no canvas at all. Always honest, always lit.
+
+**The Hero Tilt Exception.** The hero device may lean a few degrees toward the cursor (`rotateX ±4°` / `rotateY ±6°`, spring-settled; `components/tilt.tsx`), as if catching the backlight, plus a 1.5° resting tilt at desktop widths. Bounded to the hero artifact and to fine pointers at desktop widths; touch, coarse pointers, small viewports, and reduced motion get a static device.
+
+**The Cursor Light.** The visitor carries a light through the console, as input acknowledgment under the Delivery Rule (`components/cursor-light.tsx`, `components/spotlight.tsx`):
+- A dim Signal-Blue wash trails the cursor with spring lag (above content, like glare), and a brighter copy of the substrate grid is revealed in a radius around it (the flashlight finding the chassis). The reveal renders behind all content, visible only in the voids. All grids live in one document-space coordinate system (each layer offsets its pattern to the document origin; the reveal applies the scroll offset per frame), so every gridline is the same global line, scrolling with the page, and reveal and section lines always coincide.
+- Spotlight cells (bento, roadmap phases, about strip, feature points) brighten their interior and border toward the cursor while hovered, and lean ≤6px toward it. Border brightening here is acknowledgment of the pointer, not static decoration; static border glows remain banned.
+- Hero depth: the grid drifts away from the cursor while the device leans toward it, on different rates, bounded to ±8px.
+- All of it is gated to fine pointers at desktop widths; touch, coarse pointers, and reduced motion get a fully static page.
+
+These exceptions are deliberate and bounded. They do not license general ambient motion elsewhere; new effects still answer to the Delivery Rule. The Substrate itself never animates; only the cursor's reveal of it moves.
 
 ## 7. Do's and Don'ts
 
 ### Do:
 - **Do** put a real screenshot in every selling section; the screenshots are the argument.
-- **Do** keep one glow per viewport, always behind product imagery or the hero.
+- **Do** keep one dominant light per viewport, always behind product imagery or the hero; bleeds stay dim and supporting.
 - **Do** let the hero type get genuinely large; the scale jump is the cinematic register.
+- **Do** ground empty stretches with the Substrate (grid, grain, rules) instead of leaving flat voids.
 - **Do** label pre-launch states honestly (disabled buttons say "Coming soon").
 - **Do** keep copy plain and direct, like a competent teammate.
 
@@ -198,4 +249,5 @@ Motion is reveal choreography, nothing else. Library: Framer Motion (`motion` pa
 - **Don't** invent stats, testimonials, or adoption numbers.
 - **Don't** ship the corporate landing template: hero metric, logo wall, identical icon-card grids.
 - **Don't** use pure #000 or #fff, colored side-stripes, or nested cards.
-- **Don't** animate anything the user didn't scroll to or interact with.
+- **Don't** set body copy, headings, or buttons in Plex Mono; the Detail Voice is labels and indices only.
+- **Don't** animate anything the user didn't scroll to or interact with, except the sanctioned exceptions in §6: the hero nebula, the hero tilt, the rotating hero word, and the Cursor Light (which is interaction by definition).
