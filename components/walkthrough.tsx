@@ -184,7 +184,9 @@ function TourDesktop() {
   return (
     <section className="pt-16 lg:pt-24">
       <SectionHeader />
-      <div ref={runwayRef} className="relative mt-4 h-[340vh]">
+      {/* data-pin-runway: the cursor light freezes its world grid while this
+          section is pinned, since the content on screen isn't moving. */}
+      <div ref={runwayRef} data-pin-runway className="relative mt-4 h-[340vh]">
         <div className="sticky top-0 flex h-screen items-center">
           <div className="mx-auto grid w-full max-w-6xl grid-cols-[1fr_minmax(300px,360px)] items-center gap-16 px-5 sm:px-8 lg:gap-24">
             {/* Carousel: spine + windowed card track. */}

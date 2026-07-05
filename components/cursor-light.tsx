@@ -51,6 +51,9 @@ export function CursorLight() {
     // Wash trails on a heavier lerp than the grid so the light feels like
     // it has mass; the grid reveal stays close under the cursor.
     const pos = { x: -9999, y: -9999, wx: -9999, wy: -9999, o: 0, to: 0 };
+    // World-grid pattern offset: tracks -(scrollY % M) exactly, freezes
+    // while a pinned section holds the screen still, eases back on exit.
+    const grid$ = { y: 0, wasPinned: false, recovering: false };
     let raf = 0;
 
     const tick = () => {
@@ -69,12 +72,42 @@ export function CursorLight() {
       grid.style.opacity = String(pos.o);
       grid.style.maskImage = `radial-gradient(340px at ${pos.x}px ${pos.y}px, black, transparent 72%)`;
       grid.style.webkitMaskImage = grid.style.maskImage;
+
       // Document-space pattern: shift by the scroll offset so the revealed
-      // lines are the same global lines the GridLayers draw.
-      grid.style.backgroundPosition = `${-(window.scrollX % GRID_MODULE)}px ${-(window.scrollY % GRID_MODULE)}px`;
+      // lines are the same global lines the GridLayers draw. While a pinned
+      // section holds the screen still, the pattern holds still with it,
+      // then eases back onto the document grid when the pin releases.
+      const M = GRID_MODULE;
+      const runway = document.querySelector("[data-pin-runway]");
+      let pinned = false;
+      if (runway) {
+        const r = runway.getBoundingClientRect();
+        pinned = r.top <= 1 && r.bottom >= window.innerHeight - 1;
+      }
+      if (!pinned) {
+        if (grid$.wasPinned) grid$.recovering = true;
+        const target = -(window.scrollY % M);
+        if (grid$.recovering) {
+          let delta = target - grid$.y;
+          delta = ((delta % M) + M * 1.5) % M - M / 2;
+          if (Math.abs(delta) < 0.5) {
+            grid$.y = target;
+            grid$.recovering = false;
+          } else {
+            grid$.y += delta * 0.25;
+          }
+        } else {
+          grid$.y = target;
+        }
+      }
+      grid$.wasPinned = pinned;
+      grid.style.backgroundPosition = `${-(window.scrollX % M)}px ${grid$.y}px`;
 
       const settled =
-        pos.o === pos.to && pos.wx === pos.x && pos.wy === pos.y;
+        pos.o === pos.to &&
+        pos.wx === pos.x &&
+        pos.wy === pos.y &&
+        !grid$.recovering;
       if (!settled) {
         raf = requestAnimationFrame(tick);
       }
