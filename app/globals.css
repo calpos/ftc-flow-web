@@ -18,6 +18,7 @@
 
 @theme inline {
   --font-sans: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 body {
@@ -36,8 +37,9 @@ body {
 }
 
 /*
- * The one sanctioned glow: a radial light source rendered BEHIND product
- * imagery or a hero, never as box-shadow on an element. One per viewport.
+ * The dominant glow: a radial light source rendered BEHIND product
+ * imagery or a hero, never as box-shadow on an element. One dominant
+ * light per viewport; dim bleeds may support it (see .bleed-*).
  */
 .backlight {
   background: radial-gradient(
@@ -45,4 +47,71 @@ body {
     rgba(45, 140, 255, 0.16),
     transparent 72%
   );
+}
+
+/*
+ * The Substrate: the console's chassis. A faint engineering grid and film
+ * grain that keep the near-black canvas from reading as an empty void.
+ * Both are structure, not decoration: quiet enough to miss, missed when gone.
+ */
+.substrate-grid {
+  background-image:
+    linear-gradient(to right, rgba(140, 160, 210, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(140, 160, 210, 0.055) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* Grid masked to fade out toward the edges / under content. */
+.substrate-grid-fade {
+  mask-image: radial-gradient(
+    ellipse 90% 85% at 50% 40%,
+    black 0%,
+    transparent 78%
+  );
+}
+
+/* Grid masked to hang from the top of a section and dissolve downward. */
+.substrate-grid-top {
+  mask-image: linear-gradient(to bottom, black 0%, transparent 82%);
+}
+
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/*
+ * Light bleeds: dim washes of Signal Blue that soften section boundaries.
+ * Supporting light only; the .backlight / light field stays dominant.
+ */
+.bleed-top {
+  background: radial-gradient(
+    ellipse 75% 55% at 50% 0%,
+    rgba(45, 140, 255, 0.07),
+    transparent 68%
+  );
+}
+
+.bleed-bottom {
+  background: radial-gradient(
+    ellipse 75% 55% at 50% 100%,
+    rgba(45, 140, 255, 0.06),
+    transparent 68%
+  );
+}
+
+/*
+ * Reduced-motion safety net for CSS-level transitions (hover tints, the arrow
+ * nudge). JS-driven motion is gated separately by useReducedMotion. This is a
+ * hard requirement: with reduced motion on, the site is fully static.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

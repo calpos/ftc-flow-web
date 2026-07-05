@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans } from "next/font/google";
-import { Footer } from "@/components/footer";
-import { Nav } from "@/components/nav";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -9,6 +7,13 @@ const plex = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-plex",
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
   display: "swap",
 });
 
@@ -40,7 +45,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${plex.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${plex.variable} ${plexMono.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col bg-ink font-sans text-fg">
         <a
           href="#main"
@@ -48,11 +56,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <Nav />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        {children}
       </body>
     </html>
   );

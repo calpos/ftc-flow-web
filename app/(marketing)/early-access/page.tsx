@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/reveal";
 import { SubscribeForm } from "@/components/subscribe-form";
+import { GridLayer } from "@/components/substrate";
+import { buttonPrimary, monoLabel } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: "Early Access",
@@ -11,9 +15,16 @@ export const metadata: Metadata = {
 
 export default function EarlyAccessPage() {
   return (
-    <div className="mx-auto max-w-5xl px-5 pb-24 pt-16 sm:px-8 lg:pt-24">
+    <div className="relative overflow-hidden">
+      <div
+        aria-hidden
+        className="bleed-top pointer-events-none absolute inset-x-0 top-0 h-[360px]"
+      />
+      <GridLayer variant="top" />
+      <div className="mx-auto max-w-5xl px-5 pb-24 pt-16 sm:px-8 lg:pt-24">
       <Reveal className="mx-auto max-w-2xl text-center">
-        <h1 className="text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
+        <p className={`${monoLabel} text-fg-dim`}>Early access</p>
+        <h1 className="mt-5 text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
           Coming Fall 2026
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-fg-mid">
@@ -23,9 +34,20 @@ export default function EarlyAccessPage() {
         </p>
       </Reveal>
 
+      <Reveal delay={0.04} className="mx-auto mt-10 max-w-2xl text-center">
+        <Link href="/beta" className={buttonPrimary}>
+          Access local beta
+          <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
+        </Link>
+        <p className="mt-3 text-sm text-fg-dim">
+          Try every feature in your browser right now — no account needed. Runs
+          locally on this device.
+        </p>
+      </Reveal>
+
       <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
         <Reveal delay={0.08}>
-          <section className="h-full rounded-2xl border border-edge bg-surface p-7 sm:p-9">
+          <section className="h-full rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
             <h2 className="text-xl font-medium">Get the launch email</h2>
             <p className="mt-3 leading-relaxed text-fg-mid">
               One email when the TestFlight beta opens, one when FTC Flow hits
@@ -55,7 +77,7 @@ export default function EarlyAccessPage() {
             <div className="mt-7">
               <label
                 htmlFor="account-email"
-                className="block text-sm font-medium text-fg-dim"
+                className={`${monoLabel} block text-fg-dim`}
               >
                 Email
               </label>
@@ -76,6 +98,7 @@ export default function EarlyAccessPage() {
             </div>
           </section>
         </Reveal>
+      </div>
       </div>
     </div>
   );

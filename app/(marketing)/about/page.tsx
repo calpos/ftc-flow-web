@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal } from "@/components/reveal";
+import { GridLayer } from "@/components/substrate";
 import { CONTACT_EMAIL } from "@/lib/site";
-import { buttonPrimary } from "@/lib/ui";
+import { buttonPrimary, monoLabel } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: "About",
@@ -21,9 +22,16 @@ const paragraphs: readonly string[] = [
 
 export default function AboutPage() {
   return (
-    <article className="mx-auto max-w-3xl px-5 pb-24 pt-16 sm:px-8 lg:pt-24">
+    <div className="relative overflow-hidden">
+      <div
+        aria-hidden
+        className="bleed-top pointer-events-none absolute inset-x-0 top-0 h-[360px]"
+      />
+      <GridLayer variant="top" />
+      <article className="mx-auto max-w-3xl px-5 pb-24 pt-16 sm:px-8 lg:pt-24">
       <Reveal>
-        <h1 className="text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
+        <p className={`${monoLabel} text-fg-dim`}>The builder</p>
+        <h1 className="mt-5 text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
           I built the tool my team needed.
         </h1>
       </Reveal>
@@ -35,7 +43,7 @@ export default function AboutPage() {
         </div>
       </Reveal>
       <Reveal delay={0.12}>
-        <div className="mt-14 rounded-2xl border border-edge bg-surface p-7 sm:p-9">
+        <div className="mt-14 rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
           <h2 className="text-xl font-medium">Get in touch</h2>
           <p className="mt-2 max-w-[32rem] leading-relaxed text-fg-mid">
             Questions, feedback, or want your team in the beta?
@@ -53,6 +61,7 @@ export default function AboutPage() {
           </Link>
         </div>
       </Reveal>
-    </article>
+      </article>
+    </div>
   );
 }

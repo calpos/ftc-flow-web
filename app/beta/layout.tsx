@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import { StoreProvider } from "@/lib/beta/StoreProvider";
+import { BetaShell } from "./_components/BetaShell";
+
+export const metadata: Metadata = {
+  title: "Local Beta",
+  description:
+    "Try every FTC Flow feature in your browser. Runs locally — no account needed.",
+  robots: { index: false, follow: false },
+};
+
+export default function BetaLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <StoreProvider>
+      <BetaShell>{children}</BetaShell>
+    </StoreProvider>
+  );
+}

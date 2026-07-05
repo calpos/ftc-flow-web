@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { GridLayer } from "@/components/substrate";
 import { CONTACT_EMAIL } from "@/lib/site";
+import { monoLabel } from "@/lib/ui";
 
 const pageLinks = [
   { href: "/", label: "Home" },
@@ -12,8 +14,9 @@ const pageLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-edge">
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
+    <footer className="relative overflow-hidden border-t border-edge">
+      <GridLayer variant="top" className="opacity-60" />
+      <div className="relative mx-auto max-w-6xl px-5 pt-14 sm:px-8">
         <div className="flex flex-col justify-between gap-10 sm:flex-row">
           <div>
             <div className="flex items-center gap-2.5">
@@ -31,6 +34,9 @@ export function Footer() {
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-fg-dim">
               The calm coordination console for FIRST Tech Challenge teams.
               Built by an FTC competitor.
+            </p>
+            <p className={`${monoLabel} mt-6 text-fg-dim/80`}>
+              TestFlight summer 2026 · App Store fall 2026
             </p>
           </div>
           <nav aria-label="Footer">
@@ -63,6 +69,15 @@ export function Footer() {
         <p className="mt-6 text-xs leading-relaxed text-fg-dim/80">
           FIRST® and FIRST Tech Challenge are trademarks of FIRST, which does
           not endorse FTC Flow.
+        </p>
+      </div>
+      {/* The console's nameplate: a watermark bleeding off the page's end. */}
+      <div
+        aria-hidden
+        className="pointer-events-none relative mt-4 select-none overflow-hidden"
+      >
+        <p className="-mb-[0.26em] whitespace-nowrap text-center text-[clamp(4.5rem,15vw,11rem)] font-semibold leading-none tracking-[-0.04em] text-fg/[0.04]">
+          FTC FLOW
         </p>
       </div>
     </footer>

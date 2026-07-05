@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal } from "@/components/reveal";
-import { buttonPrimary } from "@/lib/ui";
+import { GridLayer } from "@/components/substrate";
+import { Timeline } from "@/components/timeline";
+import type { Phase } from "@/components/timeline";
+import { buttonPrimary, monoLabel } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: "Roadmap",
   description:
     "Where FTC Flow is now and where it's heading: TestFlight beta summer 2026, App Store launch fall 2026, then a full web portal.",
   alternates: { canonical: "/roadmap" },
-};
-
-type Phase = {
-  label: string;
-  title: string;
-  body: string;
-  current?: boolean;
 };
 
 const phases: readonly Phase[] = [
@@ -48,9 +44,16 @@ const phases: readonly Phase[] = [
 
 export default function RoadmapPage() {
   return (
-    <div className="mx-auto max-w-3xl px-5 pb-24 pt-16 sm:px-8 lg:pt-24">
+    <div className="relative overflow-hidden">
+      <div
+        aria-hidden
+        className="bleed-top pointer-events-none absolute inset-x-0 top-0 h-[360px]"
+      />
+      <GridLayer variant="top" />
+      <div className="mx-auto max-w-3xl px-5 pb-24 pt-16 sm:px-8 lg:pt-24">
       <Reveal>
-        <h1 className="text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
+        <p className={`${monoLabel} text-fg-dim`}>The roadmap</p>
+        <h1 className="mt-5 text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
           Shipping in public.
         </h1>
         <p className="mt-6 max-w-[36rem] text-lg leading-relaxed text-fg-mid">
@@ -60,39 +63,10 @@ export default function RoadmapPage() {
         </p>
       </Reveal>
 
-      <ol className="relative ml-2 mt-16 border-l border-edge">
-        {phases.map((phase, index) => (
-          <li key={phase.label} className="relative pb-14 pl-8 last:pb-0">
-            <span
-              aria-hidden
-              className={`absolute -left-[7px] top-1.5 size-3.5 rounded-full border-2 ${
-                phase.current
-                  ? "border-signal-dim bg-signal"
-                  : "border-edge bg-ink"
-              }`}
-            />
-            <Reveal delay={index * 0.05}>
-              <p
-                className={`text-xs font-medium uppercase tracking-[0.08em] ${
-                  phase.current ? "text-signal" : "text-fg-dim"
-                }`}
-              >
-                {phase.label}
-                {phase.current ? " · In progress" : null}
-              </p>
-              <h2 className="mt-2.5 text-2xl font-medium tracking-[-0.01em]">
-                {phase.title}
-              </h2>
-              <p className="mt-3 max-w-[36rem] leading-relaxed text-fg-mid">
-                {phase.body}
-              </p>
-            </Reveal>
-          </li>
-        ))}
-      </ol>
+      <Timeline phases={phases} />
 
       <Reveal className="mt-20">
-        <div className="rounded-2xl border border-edge bg-surface p-7 sm:p-9">
+        <div className="rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
           <h2 className="text-xl font-medium">Want in early?</h2>
           <p className="mt-2 max-w-[32rem] leading-relaxed text-fg-mid">
             The mailing list is how the rollout happens. Beta invites and the
@@ -103,6 +77,7 @@ export default function RoadmapPage() {
           </Link>
         </div>
       </Reveal>
+      </div>
     </div>
   );
 }
