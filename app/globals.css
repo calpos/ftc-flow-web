@@ -59,6 +59,11 @@ body {
     linear-gradient(to right, rgba(140, 160, 210, 0.055) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(140, 160, 210, 0.055) 1px, transparent 1px);
   background-size: 56px 56px;
+  /* One world grid: every instance shares the viewport coordinate system,
+     so section grids and the cursor reveal always land on the same lines.
+     (Ancestor transforms disable this per spec; keep grids out of
+     persistently-transformed wrappers.) */
+  background-attachment: fixed;
 }
 
 /* Grid masked to fade out toward the edges / under content. */

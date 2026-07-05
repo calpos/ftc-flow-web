@@ -26,9 +26,8 @@ const ROTATING = ["tasks.", "projects.", "polls.", "progress."] as const;
 export function Hero() {
   const reduceMotion = useReducedMotion();
 
-  // Depth layers: the grid drifts away from the cursor while the device
-  // leans toward it, on different rates, so the hero reads as a space
-  // rather than a flat image. Fine pointers at desktop widths only.
+  // Depth: the device leans toward the cursor (the grid stays put so the
+  // world grid keeps its viewport alignment). Fine pointers at desktop only.
   const [depthOn, setDepthOn] = useState(false);
   useEffect(() => {
     if (reduceMotion) return;
@@ -45,8 +44,6 @@ export function Hero() {
 
   const px = useMotionValue(0);
   const py = useMotionValue(0);
-  const gridX = useSpring(useTransform(px, [-0.5, 0.5], [8, -8]), SETTLE_SPRING);
-  const gridY = useSpring(useTransform(py, [-0.5, 0.5], [6, -6]), SETTLE_SPRING);
   const phoneX = useSpring(useTransform(px, [-0.5, 0.5], [-7, 7]), SETTLE_SPRING);
   const phoneY = useSpring(useTransform(py, [-0.5, 0.5], [-5, 5]), SETTLE_SPRING);
 
@@ -77,13 +74,7 @@ export function Hero() {
       onPointerLeave={resetDepth}
     >
       <LightField className="pointer-events-none absolute inset-0 -z-10" />
-      <motion.div
-        aria-hidden
-        style={depthOn ? { x: gridX, y: gridY } : undefined}
-        className="absolute -inset-2 -z-10"
-      >
-        <GridLayer variant="top" className="!z-0" />
-      </motion.div>
+      <GridLayer variant="top" />
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-16 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-8 lg:pb-28 lg:pt-24">
         <div>
           <motion.p

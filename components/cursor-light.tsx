@@ -11,7 +11,10 @@ import { useReducedMotion } from "motion/react";
  *   spring lag, like the backlight leaning toward you.
  * - Grid reveal: a brighter copy of the substrate grid, masked to a
  *   radius around the cursor, so moving the mouse feels like a flashlight
- *   finding the console's chassis in the dark.
+ *   finding the console's chassis in the dark. It renders at negative z,
+ *   behind all content: the reveal lives only in the dark voids, never
+ *   over the nav, cards, or device frames. Alignment with the section
+ *   grids comes from the shared background-attachment: fixed origin.
  *
  * Both are input acknowledgment under the Delivery Rule. Fine pointers at
  * desktop widths only; touch, coarse pointers, and reduced motion render
@@ -100,7 +103,7 @@ export function CursorLight() {
       <div
         ref={gridRef}
         aria-hidden
-        className="substrate-grid pointer-events-none fixed inset-0 z-[64] opacity-0"
+        className="substrate-grid pointer-events-none fixed inset-0 -z-[1] opacity-0"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(140, 160, 210, 0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(140, 160, 210, 0.12) 1px, transparent 1px)",

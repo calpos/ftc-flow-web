@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/reveal";
+import { Spotlight } from "@/components/spotlight";
 import { SubscribeForm } from "@/components/subscribe-form";
 import { GridLayer } from "@/components/substrate";
 import { buttonPrimary, monoLabel } from "@/lib/ui";
@@ -46,22 +47,25 @@ export default function EarlyAccessPage() {
       </Reveal>
 
       <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
-        <Reveal delay={0.08}>
-          <section className="h-full rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
-            <h2 className="text-xl font-medium">Get the launch email</h2>
-            <p className="mt-3 leading-relaxed text-fg-mid">
-              One email when the beta opens in August, one at the full release
-              in September. Nothing else, ever.
-            </p>
-            <div className="mt-7">
-              <SubscribeForm />
-            </div>
-          </section>
+        <Reveal delay={0.08} className="h-full">
+          <Spotlight className="h-full rounded-2xl border border-edge bg-surface transition-colors duration-200 hover:border-signal-dim">
+            <section className="h-full p-7 sm:p-9">
+              <h2 className="text-xl font-medium">Get the launch email</h2>
+              <p className="mt-3 leading-relaxed text-fg-mid">
+                One email when the beta opens in August, one at the full
+                release in September. Nothing else, ever.
+              </p>
+              <div className="mt-7">
+                <SubscribeForm />
+              </div>
+            </section>
+          </Spotlight>
         </Reveal>
 
-        <Reveal delay={0.16}>
-          <section className="h-full rounded-2xl border border-edge bg-surface p-7 sm:p-9">
-            <div className="flex items-start justify-between gap-4">
+        <Reveal delay={0.16} className="h-full">
+          <Spotlight className="h-full rounded-2xl border border-edge bg-surface transition-colors duration-200 hover:border-signal-dim">
+            <section className="h-full p-7 sm:p-9">
+              <div className="flex items-start justify-between gap-4">
               <h2 className="text-xl font-medium">
                 Create your FTC Flow account
               </h2>
@@ -96,7 +100,8 @@ export default function EarlyAccessPage() {
                 Coming soon
               </button>
             </div>
-          </section>
+            </section>
+          </Spotlight>
         </Reveal>
       </div>
       </div>

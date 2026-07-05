@@ -136,13 +136,13 @@ function SideBySide({
 export default function FeaturesPage() {
   return (
     <>
-      <header className="relative overflow-hidden">
+      <header className="relative overflow-hidden border-b border-edge bg-surface">
         <div
           aria-hidden
           className="bleed-top pointer-events-none absolute inset-x-0 top-0 h-[360px]"
         />
         <GridLayer variant="top" />
-        <div className="mx-auto max-w-6xl px-5 pt-16 sm:px-8 lg:pt-24">
+        <div className="mx-auto max-w-6xl px-5 pb-14 pt-16 sm:px-8 lg:pb-20 lg:pt-24">
           <Reveal className="max-w-3xl">
             <p className={`${monoLabel} text-fg-dim`}>The features</p>
             <h1 className="mt-5 text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
