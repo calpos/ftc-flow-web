@@ -36,7 +36,7 @@ export function Footer() {
               Built by an FTC competitor.
             </p>
             <p className={`${monoLabel} mt-6 text-fg-dim/80`}>
-              TestFlight summer 2026 · App Store fall 2026
+              Beta release August 2026 · Full release September 2026
             </p>
           </div>
           <nav aria-label="Footer">

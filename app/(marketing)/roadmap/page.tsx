@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal } from "@/components/reveal";
+import { Spotlight } from "@/components/spotlight";
 import { GridLayer } from "@/components/substrate";
 import { Timeline } from "@/components/timeline";
 import type { Phase } from "@/components/timeline";
@@ -9,7 +10,7 @@ import { buttonPrimary, monoLabel } from "@/lib/ui";
 export const metadata: Metadata = {
   title: "Roadmap",
   description:
-    "Where FTC Flow is now and where it's heading: TestFlight beta summer 2026, App Store launch fall 2026, then a full web portal.",
+    "Where FTC Flow is now and where it's heading: beta on TestFlight and the web in August 2026, full release September 2026, then deeper integrations.",
   alternates: { canonical: "/roadmap" },
 };
 
@@ -17,23 +18,19 @@ const phases: readonly Phase[] = [
   {
     label: "Now",
     title: "Core app complete, production polish",
-    body: "The full feature set is built and running: tasks, projects, calendar, polls, and team management. Current work is the unglamorous part that makes it shippable: refactoring, strict types, tests, and CI.",
+    body: "The full feature set is built and running (tasks, projects, calendar, polls, and team management), with the web version taking shape alongside it. Current work is the unglamorous part that makes it shippable: refactoring, strict types, tests, and CI.",
     current: true,
   },
   {
-    label: "Summer 2026",
-    title: "TestFlight beta with real FTC teams",
-    body: "FTC Flow goes to TestFlight with my own team and a couple of others. Real seasons, real coordination, real feedback. What breaks gets fixed; what confuses gets redesigned.",
+    label: "August 2026",
+    title: "Beta release, on your phone and in the browser",
+    body: "The beta opens two doors at once: TestFlight on iOS and a web beta at beta.ftcflow.app, synced. Real seasons, real coordination, real feedback. What breaks gets fixed; what confuses gets redesigned.",
+    chips: ["TestFlight", "beta.ftcflow.app", "Real FTC teams"],
   },
   {
-    label: "Fall 2026",
-    title: "App Store launch",
-    body: "Public release at the start of the 2026-27 season, rolled out through the early-access mailing list first. If you signed up, you hear about it before anyone else.",
-  },
-  {
-    label: "Next",
-    title: "The full web portal",
-    body: "beta.ftcflow.app brings every app feature to the browser with account sync, because half of team coordination happens on a laptop sitting next to the robot.",
+    label: "September 2026",
+    title: "Full release, everywhere",
+    body: "Public launch at the start of the 2026-27 season: the App Store and the full web app with account sync, rolled out through the early-access mailing list first. If you signed up, you hear about it before anyone else.",
   },
   {
     label: "Beyond",
@@ -66,16 +63,18 @@ export default function RoadmapPage() {
       <Timeline phases={phases} />
 
       <Reveal className="mt-20">
-        <div className="rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
-          <h2 className="text-xl font-medium">Want in early?</h2>
-          <p className="mt-2 max-w-[32rem] leading-relaxed text-fg-mid">
-            The mailing list is how the rollout happens. Beta invites and the
-            launch announcement go there first.
-          </p>
-          <Link href="/early-access" className={`${buttonPrimary} mt-6`}>
-            Get Early Access
-          </Link>
-        </div>
+        <Spotlight className="rounded-2xl border border-edge bg-surface transition-colors duration-200 hover:border-signal-dim">
+          <div className="p-7 sm:p-9">
+            <h2 className="text-xl font-medium">Want in early?</h2>
+            <p className="mt-2 max-w-[32rem] leading-relaxed text-fg-mid">
+              The mailing list is how the rollout happens. Beta invites and the
+              launch announcement go there first.
+            </p>
+            <Link href="/early-access" className={`${buttonPrimary} mt-6`}>
+              Get Early Access
+            </Link>
+          </div>
+        </Spotlight>
       </Reveal>
       </div>
     </div>

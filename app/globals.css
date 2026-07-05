@@ -101,6 +101,59 @@ body {
 }
 
 /*
+ * Spotlight cells (components/spotlight.tsx): interior light and border
+ * brightening that follow the cursor. Input acknowledgment, not static
+ * decoration; both layers appear only while hovered.
+ */
+.spotlight {
+  position: relative;
+}
+
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    220px circle at var(--x, 50%) var(--y, 50%),
+    rgba(45, 140, 255, 0.08),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  pointer-events: none;
+}
+
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    260px circle at var(--x, 50%) var(--y, 50%),
+    rgba(45, 140, 255, 0.5),
+    transparent 65%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  pointer-events: none;
+}
+
+.spotlight:hover::before,
+.spotlight:hover::after {
+  opacity: 1;
+}
+
+/*
  * Reduced-motion safety net for CSS-level transitions (hover tints, the arrow
  * nudge). JS-driven motion is gated separately by useReducedMotion. This is a
  * hard requirement: with reduced motion on, the site is fully static.

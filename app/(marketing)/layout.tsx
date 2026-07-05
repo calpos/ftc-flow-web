@@ -1,3 +1,4 @@
+import { CursorLight } from "@/components/cursor-light";
 import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
 import { PageTransition } from "@/components/page-transition";
@@ -12,6 +13,7 @@ export default function MarketingLayout({
   return (
     <>
       <Grain />
+      <CursorLight />
       <ScrollProgress />
       <Nav />
       <main id="main" className="flex-1">

@@ -32,14 +32,14 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-6xl px-5 py-24 text-center sm:px-8 lg:py-36">
           <Reveal>
             <p className={`${monoLabel} text-fg-dim`}>
-              TestFlight beta · Summer 2026
+              Beta release · August 2026
             </p>
             <h2 className="mt-5 text-balance text-[clamp(2rem,4.5vw,3.25rem)] font-semibold leading-tight tracking-[-0.02em]">
               Be first in line.
             </h2>
             <p className="mx-auto mt-5 max-w-md text-[1.0625rem] leading-relaxed text-fg-mid">
-              One email when the beta opens, one when it ships. Nothing else,
-              ever.
+              One email when the beta opens, one at the full release. Nothing
+              else, ever.
             </p>
             <div className="mt-9">
               <Link href="/early-access" className={buttonPrimary}>

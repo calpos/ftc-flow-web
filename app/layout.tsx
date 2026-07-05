@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s · FTC Flow",
   },
   description:
-    "FTC Flow puts your FIRST Tech Challenge team's tasks, projects, calendar, and decisions in one calm place. TestFlight beta summer 2026, App Store fall 2026.",
+    "FTC Flow puts your FIRST Tech Challenge team's tasks, projects, calendar, and decisions in one calm place, on your phone and in the browser. Beta August 2026, full release September 2026.",
   openGraph: {
     siteName: SITE_NAME,
     type: "website",

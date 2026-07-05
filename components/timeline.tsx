@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useSpring } from "motion/react";
 import { Reveal } from "@/components/reveal";
+import { Spotlight } from "@/components/spotlight";
 import { EASE } from "@/lib/motion";
 import { monoLabel } from "@/lib/ui";
 
@@ -11,6 +12,8 @@ export type Phase = {
   title: string;
   body: string;
   current?: boolean;
+  /** Mono chips rendered under the body, e.g. what ships in a phase. */
+  chips?: readonly string[];
 };
 
 /**
@@ -68,20 +71,34 @@ export function Timeline({ phases }: { phases: readonly Phase[] }) {
             />
           )}
           <Reveal delay={index * 0.05}>
-            <p
-              className={`${monoLabel} ${
-                phase.current ? "text-signal" : "text-fg-dim"
-              }`}
-            >
-              {phase.label}
-              {phase.current ? " · In progress" : null}
-            </p>
-            <h2 className="mt-2.5 text-2xl font-medium tracking-[-0.01em]">
-              {phase.title}
-            </h2>
-            <p className="mt-3 max-w-[36rem] leading-relaxed text-fg-mid">
-              {phase.body}
-            </p>
+            <Spotlight className="rounded-[16px] border border-edge bg-surface p-6 transition-colors duration-200 hover:border-signal-dim sm:p-7">
+              <p
+                className={`${monoLabel} ${
+                  phase.current ? "text-signal" : "text-fg-dim"
+                }`}
+              >
+                {phase.label}
+                {phase.current ? " · In progress" : null}
+              </p>
+              <h2 className="mt-2.5 text-2xl font-medium tracking-[-0.01em]">
+                {phase.title}
+              </h2>
+              <p className="mt-3 max-w-[36rem] leading-relaxed text-fg-mid">
+                {phase.body}
+              </p>
+              {phase.chips ? (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {phase.chips.map((chip) => (
+                    <span
+                      key={chip}
+                      className="rounded-md border border-edge bg-raised px-3 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-fg-mid"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </Spotlight>
           </Reveal>
         </li>
       ))}

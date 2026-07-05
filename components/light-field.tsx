@@ -5,11 +5,13 @@ import { useReducedMotion } from "motion/react";
 import { BacklightCanvas } from "@/components/backlight-canvas";
 
 /**
- * The Living Light 2.0: a WebGL light field behind the hero. Two or three
- * Signal-Blue light sources drift on slow, offset periods through a faint
- * noise field, with a small pointer parallax on fine pointers. Still a light
- * source, not decoration: low wattage, behind real imagery, one dominant
- * light per viewport.
+ * The Living Light 2.0: a WebGL nebula behind the hero. Domain-warped
+ * fractal noise produces flowing, cloud-like light structures with filmic
+ * contrast (deep darks, luminous cores) and narrow hue depth: indigo
+ * shadows through Signal Blue into cyan highlights. Light only, never UI
+ * paint. The field visibly leans toward and brightens near the cursor on
+ * fine pointers. Still a light source, not decoration: one dominant light
+ * per viewport, behind real content.
  *
  * Fallback ladder (DESIGN.md §6): WebGL → canvas-2D breathing glow
  * (BacklightCanvas) → static .backlight. Reduced motion skips straight to
@@ -43,9 +45,17 @@ float noise(vec2 p) {
     u.y);
 }
 
-float blob(vec2 p, vec2 c, float r) {
-  float d = length(p - c);
-  return exp(-(d * d) / (r * r));
+/* 4 octaves, rotated between octaves so the flow never axis-aligns. */
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+  for (int i = 0; i < 4; i++) {
+    v += a * noise(p);
+    p = rot * p * 2.0 + vec2(7.3, 1.7);
+    a *= 0.5;
+  }
+  return v;
 }
 
 void main() {
@@ -53,30 +63,55 @@ void main() {
   vec2 p = gl_FragCoord.xy / u_res;
   p.x *= aspect;
 
-  float t = u_time;
+  float t = u_time * 0.03;
 
-  vec2 c1 = vec2(0.60 + 0.10 * sin(t * 0.11), 0.56 + 0.08 * sin(t * 0.07 + 1.7));
-  vec2 c2 = vec2(0.36 + 0.12 * sin(t * 0.05 + 4.0), 0.40 + 0.10 * cos(t * 0.09));
-  vec2 c3 = vec2(0.52 + 0.15 * cos(t * 0.04 + 2.2), 0.74 + 0.09 * sin(t * 0.06 + 0.6));
-  c1.x *= aspect;
-  c2.x *= aspect;
-  c3.x *= aspect;
-  c1 += u_pointer * 0.08;
+  /* Pointer in field space, center-origin. */
+  vec2 ptr = vec2(u_pointer.x * aspect, u_pointer.y);
+  vec2 pc = vec2(0.5 * aspect, 0.5) + ptr;
+  float pd2 = dot(p - pc, p - pc);
+  vec2 pull = (pc - p) * (u_boost * 0.35 * exp(-pd2 / 0.18));
 
-  float l = 0.0;
-  l += blob(p, c1, 0.44) * 0.55;
-  l += blob(p, c2, 0.58) * 0.34;
-  l += blob(p, c3, 0.40) * 0.30;
+  /* Domain warping: fbm fed through itself, twice. */
+  vec2 q = vec2(
+    fbm(p * 1.6 + vec2(t, t * 0.7)),
+    fbm(p * 1.6 + vec2(t * 0.8 + 5.2, -t))
+  );
+  vec2 r = vec2(
+    fbm(p * 1.6 + q * 1.9 + pull * 2.0 + vec2(1.7, 9.2)),
+    fbm(p * 1.6 + q * 1.9 + pull * 2.0 + vec2(8.3, 2.8))
+  );
+  float f = fbm(p * 1.6 + r * 2.4);
 
-  float n = noise(p * 2.4 + vec2(t * 0.03, -t * 0.02));
-  l *= 0.82 + 0.18 * n;
-  l *= 0.16 + 0.05 * u_boost;
+  /* Filmic shaping: crush the low end, let cores glow. */
+  float l = smoothstep(0.32, 0.92, f);
+  l = pow(l, 1.7);
 
-  float dither = (hash(gl_FragCoord.xy + fract(t)) - 0.5) * (3.0 / 255.0);
+  /* The nebula masses around a slowly drifting focal point that leans
+     toward the cursor, so the light has a home instead of filling evenly. */
+  vec2 focus = vec2(
+    aspect * (0.58 + 0.06 * sin(u_time * 0.05)),
+    0.55 + 0.05 * cos(u_time * 0.04)
+  );
+  focus += ptr * 0.25 * u_boost;
+  vec2 fd = p - focus;
+  l *= exp(-dot(fd, fd) / 0.55);
+
+  /* Local brightening around the cursor itself. */
+  l *= 1.0 + 0.8 * u_boost * exp(-pd2 / 0.08);
+
+  l *= 0.42;
+
+  /* Hue depth, all within the blue family: indigo -> signal -> cyan. */
+  vec3 indigo = vec3(0.16, 0.22, 0.62);
+  vec3 signal = vec3(45.0, 140.0, 255.0) / 255.0;
+  vec3 cyan = vec3(0.45, 0.83, 1.0);
+  vec3 col = mix(indigo, signal, smoothstep(0.0, 0.5, l));
+  col = mix(col, cyan, smoothstep(0.35, 0.85, l) * 0.6);
+
+  float dither = (hash(gl_FragCoord.xy + fract(u_time)) - 0.5) * (3.0 / 255.0);
   l = max(l + dither, 0.0);
 
-  vec3 blue = vec3(45.0, 140.0, 255.0) / 255.0;
-  gl_FragColor = vec4(blue * l, l);
+  gl_FragColor = vec4(col * l, l);
 }
 `;
 
@@ -198,13 +233,32 @@ export function LightField({ className }: { className?: string }) {
 
     const start = performance.now() - Math.random() * 40000;
 
+    // Perf watchdog: if the GPU genuinely struggles (sustained 40-250ms
+    // frames; anything slower is window throttling, not load), drop to the
+    // canvas-2D tier. This is the fallback ladder protecting itself.
+    let lastFrame = 0;
+    let struggling = 0;
+
     const draw = (now: number) => {
       raf = 0;
       if (!visible || document.hidden) return;
 
-      pointer.x += (pointer.tx - pointer.x) * 0.04;
-      pointer.y += (pointer.ty - pointer.y) * 0.04;
-      pointer.boost += (pointer.tboost - pointer.boost) * 0.04;
+      if (lastFrame !== 0) {
+        const delta = now - lastFrame;
+        if (delta > 40 && delta < 250) {
+          if (++struggling >= 15) {
+            setTier("canvas2d");
+            return;
+          }
+        } else if (delta <= 40) {
+          struggling = 0;
+        }
+      }
+      lastFrame = now;
+
+      pointer.x += (pointer.tx - pointer.x) * 0.06;
+      pointer.y += (pointer.ty - pointer.y) * 0.06;
+      pointer.boost += (pointer.tboost - pointer.boost) * 0.05;
 
       gl.uniform2f(uRes, canvas.width, canvas.height);
       gl.uniform1f(uTime, (now - start) / 1000);

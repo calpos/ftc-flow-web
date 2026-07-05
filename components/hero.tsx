@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useState } from "react";
+import type { PointerEvent } from "react";
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from "motion/react";
 import { LightField } from "@/components/light-field";
 import { Phone } from "@/components/phone";
 import { RotatingWord } from "@/components/rotating-word";
 import { GridLayer } from "@/components/substrate";
 import { Tilt } from "@/components/tilt";
-import { EASE, STAGGER } from "@/lib/motion";
+import { EASE, SETTLE_SPRING, STAGGER } from "@/lib/motion";
 import { shots } from "@/lib/screenshots";
 import { buttonPrimary, buttonSecondary, monoLabel } from "@/lib/ui";
 
@@ -17,6 +25,41 @@ const ROTATING = ["tasks.", "projects.", "polls.", "progress."] as const;
 
 export function Hero() {
   const reduceMotion = useReducedMotion();
+
+  // Depth layers: the grid drifts away from the cursor while the device
+  // leans toward it, on different rates, so the hero reads as a space
+  // rather than a flat image. Fine pointers at desktop widths only.
+  const [depthOn, setDepthOn] = useState(false);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const mq = window.matchMedia("(pointer: fine)");
+    const update = () => setDepthOn(mq.matches && window.innerWidth >= 1024);
+    update();
+    mq.addEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      mq.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [reduceMotion]);
+
+  const px = useMotionValue(0);
+  const py = useMotionValue(0);
+  const gridX = useSpring(useTransform(px, [-0.5, 0.5], [8, -8]), SETTLE_SPRING);
+  const gridY = useSpring(useTransform(py, [-0.5, 0.5], [6, -6]), SETTLE_SPRING);
+  const phoneX = useSpring(useTransform(px, [-0.5, 0.5], [-7, 7]), SETTLE_SPRING);
+  const phoneY = useSpring(useTransform(py, [-0.5, 0.5], [-5, 5]), SETTLE_SPRING);
+
+  const handleDepthMove = (event: PointerEvent<HTMLElement>) => {
+    if (!depthOn) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    px.set((event.clientX - rect.left) / rect.width - 0.5);
+    py.set((event.clientY - rect.top) / rect.height - 0.5);
+  };
+  const resetDepth = () => {
+    px.set(0);
+    py.set(0);
+  };
 
   const enter = (delay: number) =>
     reduceMotion
@@ -28,9 +71,19 @@ export function Hero() {
         };
 
   return (
-    <section className="relative overflow-hidden">
+    <section
+      className="relative overflow-hidden"
+      onPointerMove={handleDepthMove}
+      onPointerLeave={resetDepth}
+    >
       <LightField className="pointer-events-none absolute inset-0 -z-10" />
-      <GridLayer variant="top" />
+      <motion.div
+        aria-hidden
+        style={depthOn ? { x: gridX, y: gridY } : undefined}
+        className="absolute -inset-2 -z-10"
+      >
+        <GridLayer variant="top" className="!z-0" />
+      </motion.div>
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-16 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-8 lg:pb-28 lg:pt-24">
         <div>
           <motion.p
@@ -68,7 +121,7 @@ export function Hero() {
             className="mt-7 max-w-[34rem] text-lg leading-relaxed text-fg-mid"
           >
             {
-              "FTC Flow puts tasks, projects, schedule, and decisions in one calm place. Who's doing what, by when: answered in fifteen seconds, not fifteen messages."
+              "FTC Flow puts tasks, projects, schedule, and decisions in one calm place, on your phone and in the browser. Who's doing what, by when: answered in fifteen seconds, not fifteen messages."
             }
           </motion.p>
           <motion.div
@@ -86,20 +139,22 @@ export function Hero() {
             {...enter(0.4 + LINE_ONE.length * STAGGER)}
             className={`${monoLabel} mt-8 text-fg-dim`}
           >
-            TestFlight summer 2026 · App Store fall 2026
+            Beta release August 2026 · Full release September 2026
           </motion.p>
         </div>
         <motion.div
           {...enter(0.2)}
           className="relative mx-auto w-[min(80vw,380px)] lg:w-[380px]"
         >
-          <Tilt className="lg:rotate-[1.5deg]">
-            <Phone
-              shot={shots.home1}
-              priority
-              sizes="(min-width: 640px) 380px, 80vw"
-            />
-          </Tilt>
+          <motion.div style={depthOn ? { x: phoneX, y: phoneY } : undefined}>
+            <Tilt className="lg:rotate-[1.5deg]">
+              <Phone
+                shot={shots.home1}
+                priority
+                sizes="(min-width: 640px) 380px, 80vw"
+              />
+            </Tilt>
+          </motion.div>
         </motion.div>
       </div>
     </section>

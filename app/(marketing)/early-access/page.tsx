@@ -9,7 +9,7 @@ import { buttonPrimary, monoLabel } from "@/lib/ui";
 export const metadata: Metadata = {
   title: "Early Access",
   description:
-    "Join the FTC Flow mailing list for the TestFlight beta and App Store launch. Accounts arrive with the web portal at beta.ftcflow.app.",
+    "Join the FTC Flow mailing list for the August 2026 beta on TestFlight and the web, and the September full release.",
   alternates: { canonical: "/early-access" },
 };
 
@@ -25,23 +25,23 @@ export default function EarlyAccessPage() {
       <Reveal className="mx-auto max-w-2xl text-center">
         <p className={`${monoLabel} text-fg-dim`}>Early access</p>
         <h1 className="mt-5 text-balance text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em]">
-          Coming Fall 2026
+          Coming September 2026
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-fg-mid">
-          FTC Flow ships to the App Store at the start of the 2026-27 season,
-          after a summer of TestFlight testing with real teams. Two ways to be
-          early:
+          The beta opens in August 2026 on TestFlight and the web; the full
+          release lands in September, at the start of the 2026-27 season. Two
+          ways to be early:
         </p>
       </Reveal>
 
       <Reveal delay={0.04} className="mx-auto mt-10 max-w-2xl text-center">
         <Link href="/beta" className={buttonPrimary}>
-          Access local beta
+          Access the local alpha
           <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
         </Link>
         <p className="mt-3 text-sm text-fg-dim">
-          Try every feature in your browser right now — no account needed. Runs
-          locally on this device.
+          An alpha preview of the web version: try every feature in your
+          browser right now, no account needed. Runs locally on this device.
         </p>
       </Reveal>
 
@@ -50,8 +50,8 @@ export default function EarlyAccessPage() {
           <section className="h-full rounded-2xl border border-edge bg-surface p-7 transition-colors duration-200 hover:border-signal-dim sm:p-9">
             <h2 className="text-xl font-medium">Get the launch email</h2>
             <p className="mt-3 leading-relaxed text-fg-mid">
-              One email when the TestFlight beta opens, one when FTC Flow hits
-              the App Store. Nothing else, ever.
+              One email when the beta opens in August, one at the full release
+              in September. Nothing else, ever.
             </p>
             <div className="mt-7">
               <SubscribeForm />
@@ -71,7 +71,7 @@ export default function EarlyAccessPage() {
             </div>
             <p className="mt-3 leading-relaxed text-fg-mid">
               {
-                "Accounts arrive with the web portal at beta.ftcflow.app: every app feature in the browser, synced with your phone. There's nothing to sign into yet, and we won't pretend otherwise."
+                "Accounts arrive with the web beta at beta.ftcflow.app: every feature in the browser, synced with your phone. There's nothing to sign into yet, and we won't pretend otherwise."
               }
             </p>
             <div className="mt-7">

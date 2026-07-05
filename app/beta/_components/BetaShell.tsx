@@ -57,7 +57,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
         </main>
 
         <footer className="border-t border-edge px-4 py-5 text-center text-xs text-fg-dim sm:px-6 lg:px-10">
-          FTC Flow local beta · data is stored only in this browser ·{" "}
+          FTC Flow local alpha · data is stored only in this browser ·{" "}
           <Link href="/" className="text-fg-mid underline-offset-2 hover:underline">
             Back to site
           </Link>

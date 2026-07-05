@@ -10,7 +10,7 @@ Two audiences land here, both skeptical and both fast to leave. FTC students (13
 
 ## Product Purpose
 
-This is the marketing site for FTC Flow, a calm dark coordination app for FIRST Tech Challenge teams (tasks, projects, calendar, polls, team management). The app is pre-launch: TestFlight beta in summer 2026, App Store in fall 2026, a full web portal after that. The site exists to convert visits into early-access mailing list signups and to establish credibility before launch. Success is a student forwarding the link to their team, and a mentor signing up without wondering whether the product is vaporware. The site sells the app; it is not the app. No real auth, no app features.
+This is the marketing site for FTC Flow, a calm dark coordination platform for FIRST Tech Challenge teams (tasks, projects, calendar, polls, team management) that lives on the phone and in the browser, synced. The product is pre-launch: beta in August 2026 on TestFlight and the web (beta.ftcflow.app), full release in September 2026 on the App Store and the full web app with account sync. The site exists to convert visits into early-access mailing list signups and to establish credibility before launch. Success is a student forwarding the link to their team, and a mentor signing up without wondering whether the product is vaporware. The site sells the product; a local alpha at /beta lets visitors try every feature in-browser with local-only data. No real auth yet, and the site says so plainly.
 
 ## Brand Personality
 
@@ -27,7 +27,7 @@ Sharp, confident, plain-spoken. The voice of a competent teammate who built the 
 
 1. **The screenshots are the argument.** Real app UI, framed like a product, does the persuading. Every section's job is to get a real screen in front of the visitor; copy supports the image, not the reverse.
 2. **Cinematic restraint.** The site may move and glow where the app stays still, but every effect points at the product: a reveal brings a screenshot into view, a glow backlights a device. Decoration that points at nothing gets cut.
-3. **Honest pre-launch.** Roadmap framing over launch theater. "Coming Fall 2026" stated plainly, disabled states labeled honestly, shipping in public as the narrative.
+3. **Honest pre-launch.** Roadmap framing over launch theater. "Coming September 2026" stated plainly, disabled states labeled honestly, shipping in public as the narrative.
 4. **One voice, louder.** Signal Blue remains the interface's single voice, inherited from the app; the web just turns up its wattage. If two blue elements compete in one viewport, one is wrong.
 5. **The fifteen-second pitch.** The landing hero must answer "what is it, who is it for, what do I do next" before the first scroll, the same way the app answers "what do I do next" in fifteen seconds.
 

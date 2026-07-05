@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { BrowserChrome } from "@/components/browser-frame";
 import { Reveal } from "@/components/reveal";
+import { Spotlight } from "@/components/spotlight";
 import { GridLayer } from "@/components/substrate";
 import { shots } from "@/lib/screenshots";
 import type { Screenshot } from "@/lib/screenshots";
@@ -9,9 +11,9 @@ import { monoLabel } from "@/lib/ui";
 
 /**
  * The bento: the home page's second rhythm. Secondary features in varied
- * cells (screenshot crops and text moments), so density changes instead of
- * a fourth identical teaser. Cells share the tonal chassis: Surface fill,
- * hairline border, border tint on hover. No shadows, no glow.
+ * cells (screenshot crops, a browser moment, text strips), so density
+ * changes instead of a fourth identical teaser. Cells share the tonal
+ * chassis: Surface fill, hairline border, cursor spotlight. No shadows.
  */
 
 function Arrow() {
@@ -36,13 +38,14 @@ type CellProps = {
   children: ReactNode;
 };
 
+/** Spotlight chassis + an inner clip so the border ring stays visible. */
 function Cell({ className, children }: CellProps) {
   return (
-    <div
-      className={`group relative overflow-hidden rounded-[16px] border border-edge bg-surface transition-colors duration-200 hover:border-signal-dim ${className ?? ""}`}
-    >
-      {children}
-    </div>
+    <Spotlight className="group h-full rounded-[16px] border border-edge bg-surface transition-colors duration-200 hover:border-signal-dim">
+      <div className={`h-full overflow-hidden rounded-[15px] ${className ?? ""}`}>
+        {children}
+      </div>
+    </Spotlight>
   );
 }
 
@@ -53,12 +56,11 @@ type ShotCellProps = {
   shot: Screenshot;
   /** object-position for the crop, e.g. "50% 8%". */
   position: string;
-  className?: string;
 };
 
-function ShotCell({ label, title, line, shot, position, className }: ShotCellProps) {
+function ShotCell({ label, title, line, shot, position }: ShotCellProps) {
   return (
-    <Cell className={className}>
+    <Cell>
       <div className="p-6 pb-0">
         <p className={`${monoLabel} text-fg-dim`}>{label}</p>
         <h3 className="mt-3 text-lg font-medium leading-snug">{title}</h3>
@@ -93,7 +95,7 @@ export function Bento() {
 
       <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-12">
         <Reveal className="sm:col-span-2 lg:col-span-7">
-          <Cell className="flex h-full flex-col justify-between p-6 sm:p-8">
+          <Cell className="flex flex-col justify-between p-6 sm:p-8">
             <GridLayer variant="fade" className="!z-0 opacity-70" />
             <div className="relative">
               <p className={`${monoLabel} text-fg-dim`}>The builder</p>
@@ -123,47 +125,54 @@ export function Bento() {
             line="Coach, captain, programmer, CAD, driver: visible to the whole team."
             shot={shots.teamMembers}
             position="50% 14%"
-            className="h-full"
           />
         </Reveal>
 
-        <Reveal delay={0.12} className="lg:col-span-4">
+        <Reveal delay={0.12} className="sm:col-span-2 lg:col-span-8">
+          <Cell className="flex flex-col p-6 sm:p-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className={`${monoLabel} text-fg-dim`}>Web + app</p>
+                <h3 className="mt-3 text-balance text-[clamp(1.5rem,2.5vw,1.875rem)] font-medium leading-tight tracking-[-0.01em]">
+                  The same console, at desktop width.
+                </h3>
+              </div>
+              <p className="max-w-[18rem] text-sm leading-relaxed text-fg-mid">
+                The web beta brings every feature to the browser, synced with
+                your phone.
+              </p>
+            </div>
+            <div className="relative mt-6 h-64 overflow-hidden [mask-image:linear-gradient(to_bottom,black_70%,transparent)]">
+              <BrowserCrop />
+            </div>
+          </Cell>
+        </Reveal>
+
+        <Reveal delay={0.18} className="lg:col-span-4">
           <ShotCell
             label="Agenda"
             title="Next week, already sorted"
             line="The upcoming view turns the calendar into a list you can act on."
             shot={shots.calendarUpcoming}
             position="50% 24%"
-            className="h-full"
           />
         </Reveal>
 
-        <Reveal delay={0.18} className="lg:col-span-4">
-          <ShotCell
-            label="Perspectives"
-            title="See it as any teammate"
-            line="Switch the active member to check what each role actually sees."
-            shot={shots.accounts}
-            position="50% 20%"
-            className="h-full"
-          />
-        </Reveal>
-
-        <Reveal delay={0.24} className="lg:col-span-4">
-          <Cell className="flex h-full flex-col justify-between p-6 sm:p-8">
+        <Reveal delay={0.24} className="sm:col-span-2 lg:col-span-12">
+          <Cell className="flex flex-col justify-between gap-6 p-6 sm:flex-row sm:items-center sm:p-8">
             <div>
               <p className={`${monoLabel} text-fg-dim`}>The roadmap</p>
-              <h3 className="mt-4 text-balance text-[clamp(1.5rem,2.5vw,1.875rem)] font-medium leading-tight tracking-[-0.01em]">
+              <h3 className="mt-3 text-balance text-[clamp(1.25rem,2vw,1.5rem)] font-medium leading-tight tracking-[-0.01em]">
                 Shipping in public.
               </h3>
-              <p className="mt-4 text-[0.9375rem] leading-relaxed text-fg-mid">
+              <p className="mt-2 max-w-[36rem] text-[0.9375rem] leading-relaxed text-fg-mid">
                 No invented numbers, no launch theater: what&apos;s done,
                 what&apos;s next, and where it&apos;s heading.
               </p>
             </div>
             <Link
               href="/roadmap"
-              className="mt-8 inline-flex items-center gap-1.5 font-medium text-signal transition-colors duration-150 hover:text-[#5ba4ff]"
+              className="inline-flex shrink-0 items-center gap-1.5 font-medium text-signal transition-colors duration-150 hover:text-[#5ba4ff]"
             >
               See the roadmap
               <Arrow />
@@ -172,5 +181,22 @@ export function Bento() {
         </Reveal>
       </div>
     </section>
+  );
+}
+
+/** The web capture inside its browser chrome, cropped to the cell. */
+function BrowserCrop() {
+  return (
+    <div className="overflow-hidden rounded-t-[16px] border border-b-0 border-edge bg-surface">
+      <BrowserChrome />
+      <Image
+        src={shots.webHome.src}
+        alt={shots.webHome.alt}
+        width={shots.webHome.width}
+        height={shots.webHome.height}
+        sizes="(min-width: 1024px) 640px, 92vw"
+        className="w-full object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.015]"
+      />
+    </div>
   );
 }

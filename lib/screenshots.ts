@@ -64,4 +64,16 @@ export const shots = {
     height: 2436,
     alt: "Account perspective switcher: choose which team member's view of the app is active",
   },
+  webHome: {
+    src: "/screenshots/web-home.png",
+    width: 2880,
+    height: 1800,
+    alt: "FTC Flow in the browser: the same home dashboard with next events, tasks, projects, and the upcoming agenda in a three-column layout",
+  },
+  webTeam: {
+    src: "/screenshots/web-team.png",
+    width: 2880,
+    height: 1800,
+    alt: "FTC Flow team view in the browser: roster, projects, tasks, and polls tabs at desktop width",
+  },
 } as const satisfies Record<string, Screenshot>;

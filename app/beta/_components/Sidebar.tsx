@@ -35,7 +35,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div className="flex items-center gap-2">
           <span className="text-base font-semibold tracking-tight text-fg">FTC Flow</span>
           <span className="rounded-md bg-signal-dim px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-signal">
-            Local Beta
+            Local Alpha
           </span>
         </div>
         <p className="mt-2 text-sm text-fg-dim">

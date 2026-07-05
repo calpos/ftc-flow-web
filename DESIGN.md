@@ -92,7 +92,7 @@ components:
 
 The website lives in the same near-black world as the app, but it has a different job. The app is a quiet tool a student checks for fifteen seconds; the site is a pitch that has to earn a forward. So the site keeps the app's discipline (three tonal layers, 1px hairlines, one blue voice, IBM Plex Sans) and adds what the app forbids itself: scale, light, and motion. Display type gets large. Sections reveal as you scroll. And Signal Blue, which in the app is only ever paint, is allowed on the web to behave like a light source: a soft radial glow rising behind a phone, a faint tint bleeding off a section edge.
 
-The discipline is what keeps the cinema from becoming slop. Every glow backlights a real screenshot. Every reveal delivers a real screen. The palette never grows; the blue never becomes a gradient ramp or a text fill; the neutrals stay cool and blue-tinted. A visitor should feel they are looking at the app's world from outside, at night, with the console glowing.
+The discipline is what keeps the cinema from becoming slop. Every glow backlights a real screenshot. Every reveal delivers a real screen. The palette never grows; the blue never becomes a text fill, and the only gradient ramp it is allowed is physical light temperature inside the hero nebula (§6). The neutrals stay cool and blue-tinted. A visitor should feel they are looking at the app's world from outside, at night, with the console glowing.
 
 The 2026 "turned up" revision added two layers without changing the world: **light got an engine** (a WebGL light field behind the hero, with a documented fallback ladder) and **the void got a chassis** (the Substrate: faint engineering grid, film grain, hairline section rules, and a mono detail voice). The darkness now reads as designed structure, not empty space.
 
@@ -214,7 +214,9 @@ Motion is reveal choreography, with two named light-source exceptions (below). L
 ### Named Rules
 **The Delivery Rule.** Every animation delivers content into view or acknowledges input, with exactly two sanctioned exceptions below. Ambient motion (floating orbs, drifting gradients, marquee strips) is otherwise banned.
 
-**The Living Light Exception 2.0.** The hero's dominant light is a WebGL light field (`components/light-field.tsx`): two or three Signal-Blue sources drifting on slow offset periods (~20s+) through a faint noise field, dithered against banding, with a small pointer parallax on fine pointers. Wattage stays low (peak ~0.2 alpha): it is a light source, not decoration — one dominant light per viewport, behind real content, never paint/text/border. Engineering guardrails: single draw call, DPR capped at 1.5, rAF paused offscreen and on hidden tabs, `powerPreference: "low-power"`.
+**The Living Light Exception 2.0.** The hero's dominant light is a WebGL nebula (`components/light-field.tsx`): domain-warped fractal noise (fbm fed through itself) producing flowing, cloud-like light structures with filmic contrast (crushed darks, luminous cores), massed around a slowly drifting focal point. The field leans toward and brightens near the cursor on fine pointers. Wattage stays low: it is a light source, not decoration; one dominant light per viewport, behind real content, never paint/text/border. Engineering guardrails: single draw call, DPR capped at 1.5, rAF paused offscreen and on hidden tabs, `powerPreference: "low-power"`, dithered against banding, plus a perf watchdog that auto-drops to the canvas-2D tier on sustained slow frames (40–250ms; slower cadences are window throttling and are ignored).
+
+**Light temperature (nebula only).** Within the light field, intensity maps to a narrow hue ramp inside the blue family: indigo shadows → Signal Blue → cyan cores. This is physical light behaving like light, not a palette expansion: UI paint, text, borders, and every other glow stay single-hue Signal Blue, and the ramp never appears outside the light field.
 
 **The fallback ladder** (in priority order):
 1. **WebGL light field** — the shipping default.
@@ -223,7 +225,13 @@ Motion is reveal choreography, with two named light-source exceptions (below). L
 
 **The Hero Tilt Exception.** The hero device may lean a few degrees toward the cursor (`rotateX ±4°` / `rotateY ±6°`, spring-settled; `components/tilt.tsx`), as if catching the backlight, plus a 1.5° resting tilt at desktop widths. Bounded to the hero artifact and to fine pointers at desktop widths; touch, coarse pointers, small viewports, and reduced motion get a static device.
 
-These two exceptions are deliberate and bounded. They do not license general ambient motion elsewhere; new effects still answer to the Delivery Rule. The Substrate never animates.
+**The Cursor Light.** The visitor carries a light through the console, as input acknowledgment under the Delivery Rule (`components/cursor-light.tsx`, `components/spotlight.tsx`):
+- A dim Signal-Blue wash trails the cursor with spring lag, and a brighter copy of the substrate grid is revealed in a radius around it (the flashlight finding the chassis).
+- Spotlight cells (bento, roadmap phases, about strip, feature points) brighten their interior and border toward the cursor while hovered, and lean ≤6px toward it. Border brightening here is acknowledgment of the pointer, not static decoration; static border glows remain banned.
+- Hero depth: the grid drifts away from the cursor while the device leans toward it, on different rates, bounded to ±8px.
+- All of it is gated to fine pointers at desktop widths; touch, coarse pointers, and reduced motion get a fully static page.
+
+These exceptions are deliberate and bounded. They do not license general ambient motion elsewhere; new effects still answer to the Delivery Rule. The Substrate itself never animates; only the cursor's reveal of it moves.
 
 ## 7. Do's and Don'ts
 
@@ -242,4 +250,4 @@ These two exceptions are deliberate and bounded. They do not license general amb
 - **Don't** ship the corporate landing template: hero metric, logo wall, identical icon-card grids.
 - **Don't** use pure #000 or #fff, colored side-stripes, or nested cards.
 - **Don't** set body copy, headings, or buttons in Plex Mono; the Detail Voice is labels and indices only.
-- **Don't** animate anything the user didn't scroll to or interact with, except the two sanctioned light-source exceptions in §6 (the hero light field and hero tilt) and the rotating hero word.
+- **Don't** animate anything the user didn't scroll to or interact with, except the sanctioned exceptions in §6: the hero nebula, the hero tilt, the rotating hero word, and the Cursor Light (which is interaction by definition).
