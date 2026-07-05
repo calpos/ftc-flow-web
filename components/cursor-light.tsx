@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
+import { GRID_MODULE } from "@/components/substrate";
 
 /**
  * The Cursor Light: the visitor carries a light through the console.
@@ -13,8 +14,10 @@ import { useReducedMotion } from "motion/react";
  *   radius around the cursor, so moving the mouse feels like a flashlight
  *   finding the console's chassis in the dark. It renders at negative z,
  *   behind all content: the reveal lives only in the dark voids, never
- *   over the nav, cards, or device frames. Alignment with the section
- *   grids comes from the shared background-attachment: fixed origin.
+ *   over the nav, cards, or device frames. The pattern is offset by the
+ *   scroll position each frame, putting it in document space alongside
+ *   every GridLayer, so the revealed lines scroll with the page and land
+ *   exactly on the section gridlines.
  *
  * Both are input acknowledgment under the Delivery Rule. Fine pointers at
  * desktop widths only; touch, coarse pointers, and reduced motion render
@@ -55,19 +58,24 @@ export function CursorLight() {
       pos.wx += (pos.x - pos.wx) * 0.08;
       pos.wy += (pos.y - pos.wy) * 0.08;
       pos.o += (pos.to - pos.o) * 0.1;
+      // Snap the asymptotes so the loop can actually settle and idle;
+      // pointermove and scroll listeners kick it back to life.
+      if (Math.abs(pos.to - pos.o) < 0.005) pos.o = pos.to;
+      if (Math.abs(pos.x - pos.wx) < 0.3) pos.wx = pos.x;
+      if (Math.abs(pos.y - pos.wy) < 0.3) pos.wy = pos.y;
 
       wash.style.transform = `translate3d(${pos.wx}px, ${pos.wy}px, 0) translate(-50%, -50%)`;
       wash.style.opacity = String(pos.o);
       grid.style.opacity = String(pos.o);
       grid.style.maskImage = `radial-gradient(340px at ${pos.x}px ${pos.y}px, black, transparent 72%)`;
       grid.style.webkitMaskImage = grid.style.maskImage;
+      // Document-space pattern: shift by the scroll offset so the revealed
+      // lines are the same global lines the GridLayers draw.
+      grid.style.backgroundPosition = `${-(window.scrollX % GRID_MODULE)}px ${-(window.scrollY % GRID_MODULE)}px`;
 
-      if (
-        pos.to > 0 ||
-        pos.o > 0.01 ||
-        Math.abs(pos.x - pos.wx) > 0.5 ||
-        Math.abs(pos.y - pos.wy) > 0.5
-      ) {
+      const settled =
+        pos.o === pos.to && pos.wx === pos.x && pos.wy === pos.y;
+      if (!settled) {
         raf = requestAnimationFrame(tick);
       }
     };
@@ -86,12 +94,19 @@ export function CursorLight() {
       pos.to = 0;
       if (raf === 0) raf = requestAnimationFrame(tick);
     };
+    // Scrolling moves the document-space pattern under a stationary cursor,
+    // so a visible reveal needs re-painting on scroll too.
+    const onScroll = () => {
+      if (pos.o > 0.01 && raf === 0) raf = requestAnimationFrame(tick);
+    };
 
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
     return () => {
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("scroll", onScroll);
       document.documentElement.removeEventListener("pointerleave", onLeave);
     };
   }, [enabled]);

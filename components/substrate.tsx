@@ -1,7 +1,20 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
 /**
  * The Substrate: the console's chassis. Static, aria-hidden texture layers
- * that give the near-black canvas quiet structure. Pure CSS, zero JS cost.
+ * that give the near-black canvas quiet structure.
+ *
+ * The grid is one world grid in DOCUMENT space: every GridLayer offsets its
+ * pattern by its own document position (modulo the module size), so all
+ * gridlines across the site are the same global lines, they scroll with the
+ * page, and the cursor reveal (which applies the scroll offset itself) lands
+ * exactly on them.
  */
+
+/** Grid module size in px. Mirrors background-size in globals.css. */
+export const GRID_MODULE = 56;
 
 /** Film grain over the whole page. Mounted once per layout, above content. */
 export function Grain() {
@@ -21,10 +34,39 @@ type GridLayerProps = {
 
 /** Faint engineering grid behind a section. Position the parent relative. */
 export function GridLayer({ variant = "fade", className }: GridLayerProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const align = () => {
+      const rect = node.getBoundingClientRect();
+      const docX = rect.left + window.scrollX;
+      const docY = rect.top + window.scrollY;
+      node.style.backgroundPosition = `${-(((docX % GRID_MODULE) + GRID_MODULE) % GRID_MODULE)}px ${-(((docY % GRID_MODULE) + GRID_MODULE) % GRID_MODULE)}px`;
+    };
+
+    align();
+    // Entrance reveals translate ancestors for ~0.6s; re-measure after they
+    // settle so the offset reflects the layer's resting document position.
+    const settle = setTimeout(align, 800);
+
+    window.addEventListener("resize", align);
+    const ro = new ResizeObserver(align);
+    ro.observe(document.body);
+    return () => {
+      clearTimeout(settle);
+      window.removeEventListener("resize", align);
+      ro.disconnect();
+    };
+  }, []);
+
   const mask =
     variant === "top" ? "substrate-grid-top" : "substrate-grid-fade";
   return (
     <div
+      ref={ref}
       aria-hidden
       className={`substrate-grid ${mask} pointer-events-none absolute inset-0 -z-10 ${className ?? ""}`}
     />

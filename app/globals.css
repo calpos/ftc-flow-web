@@ -54,16 +54,18 @@ body {
  * grain that keep the near-black canvas from reading as an empty void.
  * Both are structure, not decoration: quiet enough to miss, missed when gone.
  */
+/*
+ * One world grid in DOCUMENT space: every instance offsets its pattern to
+ * the document origin (background-position set at runtime by GridLayer and
+ * the cursor reveal), so all gridlines are the same global lines and they
+ * scroll with the page. The 56px module is mirrored as GRID_MODULE in
+ * components/substrate.tsx.
+ */
 .substrate-grid {
   background-image:
     linear-gradient(to right, rgba(140, 160, 210, 0.055) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(140, 160, 210, 0.055) 1px, transparent 1px);
   background-size: 56px 56px;
-  /* One world grid: every instance shares the viewport coordinate system,
-     so section grids and the cursor reveal always land on the same lines.
-     (Ancestor transforms disable this per spec; keep grids out of
-     persistently-transformed wrappers.) */
-  background-attachment: fixed;
 }
 
 /* Grid masked to fade out toward the edges / under content. */
