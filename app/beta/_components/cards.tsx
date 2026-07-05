@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, ListChecks } from "lucide-react";
+import { CalendarDays, Check, ListChecks, Trash2 } from "lucide-react";
 import {
   Task,
   TeamEvent,
@@ -82,41 +82,54 @@ export function TaskCard({
   parent,
   members,
   onOpen,
+  onComplete,
+  onDelete,
 }: {
   task: Task;
   parent?: TeamTask;
   members: TeamMember[];
   onOpen: () => void;
+  onComplete?: () => void;
+  onDelete?: () => void;
 }) {
   const progress = formatProgress(getTaskItemProgress(task));
+  const isComplete = getTaskItemProgress(task) >= 100;
   const assigned = membersByIds(members, task.assignedMembers);
   const doneSubs = task.subtasks.filter((s) => s.completed).length;
 
   return (
-    <Card onClick={onOpen} className="overflow-hidden">
+    <Card as="div" className="overflow-hidden group hover:border-signal-dim cursor-default">
       <div className="flex">
         <div className="w-1 shrink-0" style={{ backgroundColor: task.color }} />
-        <div className="min-w-0 flex-1 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="truncate font-medium text-fg">{task.title}</h3>
-              {parent ? (
-                <Pill label={parent.name} color={parent.color} className="mt-1.5" />
+        <div className={`min-w-0 flex-1 p-4${isComplete ? " opacity-60 transition-opacity duration-300" : ""}`}>
+          <button
+            type="button"
+            onClick={onOpen}
+            className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal rounded-xl"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className={`truncate font-medium${isComplete ? " line-through text-fg-dim transition-all duration-300" : " text-fg"}`}>
+                  {task.title}
+                </h3>
+                {parent ? (
+                  <Pill label={parent.name} color={parent.color} className="mt-1.5" />
+                ) : null}
+              </div>
+              {task.dueDate ? (
+                <div className="shrink-0 text-right">
+                  <p className="text-xs font-medium text-fg-mid">
+                    {formatDateDisplay(task.dueDate)}
+                  </p>
+                  <p className="text-[11px] text-fg-dim">{getDaysAwayText(task.dueDate)}</p>
+                </div>
               ) : null}
             </div>
-            {task.dueDate ? (
-              <div className="shrink-0 text-right">
-                <p className="text-xs font-medium text-fg-mid">
-                  {formatDateDisplay(task.dueDate)}
-                </p>
-                <p className="text-[11px] text-fg-dim">{getDaysAwayText(task.dueDate)}</p>
-              </div>
-            ) : null}
-          </div>
-          <div className="mt-3 flex items-center gap-3">
-            <ProgressBar value={progress} color={task.color} className="flex-1" />
-            <span className="text-xs font-medium text-fg">{progress}%</span>
-          </div>
+            <div className="mt-3 flex items-center gap-3">
+              <ProgressBar value={progress} color={task.color} className="flex-1" />
+              <span className="text-xs font-medium text-fg">{progress}%</span>
+            </div>
+          </button>
           <div className="mt-2.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
               <StageBadge progress={progress} />
@@ -126,7 +139,33 @@ export function TaskCard({
                 </span>
               ) : null}
             </div>
-            {assigned.length ? <AvatarStack members={assigned} /> : null}
+            <div className="flex items-center gap-1.5">
+              {assigned.length ? <AvatarStack members={assigned} /> : null}
+              {(onComplete || onDelete) ? (
+                <div className="pointer-events-none flex items-center gap-1 opacity-0 transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 [@media(pointer:coarse)]:pointer-events-auto [@media(pointer:coarse)]:opacity-100">
+                  {onComplete ? (
+                    <button
+                      type="button"
+                      aria-label={isComplete ? "Mark incomplete" : "Mark complete"}
+                      onClick={(e) => { e.stopPropagation(); onComplete(); }}
+                      className={`grid h-7 w-7 place-items-center rounded-lg transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#34C759] active:scale-90${isComplete ? " border border-[#34C759]/40 bg-[#34C759]/10 text-[#34C759]" : " text-fg-dim hover:bg-[#34C759]/10 hover:text-[#34C759]"}`}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                  {onDelete ? (
+                    <button
+                      type="button"
+                      aria-label="Delete task"
+                      onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                      className="grid h-7 w-7 place-items-center rounded-lg text-fg-dim transition-transform duration-100 hover:bg-[#FF453A]/10 hover:text-[#FF453A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF453A] active:scale-90"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
