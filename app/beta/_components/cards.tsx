@@ -10,12 +10,13 @@ import {
   formatEventTimeRange,
   formatProgress,
   getDaysAwayText,
+  getDeadlineUrgency,
   getEventTypeColor,
   getEventTypeLabel,
   getProjectProgress,
   getTaskItemProgress,
 } from "@/lib/beta/types";
-import { AvatarStack, Card, Pill, ProgressBar, StageBadge } from "./ui";
+import { AvatarStack, Card, DeadlineDateDisplay, Pill, ProgressBar, StageBadge } from "./ui";
 
 function membersByIds(members: TeamMember[], ids: string[]): TeamMember[] {
   return ids
@@ -46,12 +47,11 @@ export function ProjectCard({
           <div className="flex items-start justify-between gap-3">
             <h3 className="truncate font-medium text-fg">{project.name}</h3>
             {project.dueDate ? (
-              <div className="shrink-0 text-right">
-                <p className="text-xs font-medium text-fg-mid">
-                  {formatDateDisplay(project.dueDate)}
-                </p>
-                <p className="text-[11px] text-fg-dim">{getDaysAwayText(project.dueDate)}</p>
-              </div>
+              <DeadlineDateDisplay
+                dateLabel={formatDateDisplay(project.dueDate)}
+                relativeLabel={getDaysAwayText(project.dueDate)}
+                urgency={getDeadlineUrgency(project.dueDate, progress === 100)}
+              />
             ) : null}
           </div>
           {project.description ? (
@@ -117,12 +117,11 @@ export function TaskCard({
                 ) : null}
               </div>
               {task.dueDate ? (
-                <div className="shrink-0 text-right">
-                  <p className="text-xs font-medium text-fg-mid">
-                    {formatDateDisplay(task.dueDate)}
-                  </p>
-                  <p className="text-[11px] text-fg-dim">{getDaysAwayText(task.dueDate)}</p>
-                </div>
+                <DeadlineDateDisplay
+                  dateLabel={formatDateDisplay(task.dueDate)}
+                  relativeLabel={getDaysAwayText(task.dueDate)}
+                  urgency={getDeadlineUrgency(task.dueDate, progress === 100)}
+                />
               ) : null}
             </div>
             <div className="mt-3 flex items-center gap-3">
