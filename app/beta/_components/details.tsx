@@ -50,10 +50,12 @@ export function TaskDetail({
   task,
   onClose,
   onEdit,
+  open = true,
 }: {
   task: Task;
   onClose: () => void;
   onEdit: () => void;
+  open?: boolean;
 }) {
   const { currentUser, tasks, updateTaskItem, deleteTaskItem } = useApp();
   const parent = task.parentProjectId
@@ -80,7 +82,7 @@ export function TaskDetail({
 
   return (
     <SlideOver
-      open
+      open={open}
       onClose={onClose}
       title={task.title}
       accent={task.color}
@@ -185,12 +187,14 @@ export function ProjectDetail({
   onEdit,
   onOpenTask,
   onAddTask,
+  open = true,
 }: {
   project: TeamTask;
   onClose: () => void;
   onEdit: () => void;
   onOpenTask: (taskId: string) => void;
   onAddTask: () => void;
+  open?: boolean;
 }) {
   const { currentUser, taskItems, updateProjectWithCascade, deleteTask } = useApp();
   const children = taskItems.filter((t) => t.parentProjectId === project.id);
@@ -209,7 +213,7 @@ export function ProjectDetail({
 
   return (
     <SlideOver
-      open
+      open={open}
       onClose={onClose}
       title={project.name}
       accent={project.color}

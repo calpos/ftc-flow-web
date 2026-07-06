@@ -19,15 +19,16 @@ import {
 } from "./fields";
 import { newId } from "./util";
 
-// Mounted only while open, so state initializes once from props.
 export function TaskDialog({
   onClose,
   editing,
   defaultParentId,
+  open = true,
 }: {
   onClose: () => void;
   editing?: Task | null;
   defaultParentId?: string;
+  open?: boolean;
 }) {
   const { currentUser, members, tasks, addTaskItem, updateTaskItem, deleteTaskItem } =
     useApp();
@@ -103,8 +104,9 @@ export function TaskDialog({
 
   return (
     <Dialog
-      open
+      open={open}
       onClose={onClose}
+      onSubmit={handleSave}
       title={editing ? "Edit task" : "New task"}
       footer={
         <>

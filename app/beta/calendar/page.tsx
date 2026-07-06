@@ -63,15 +63,25 @@ export default function CalendarPage() {
     new Set<CalKind>(["event", "project", "task", "poll"]),
   );
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [dayPanelOpen, setDayPanelOpen] = useState(false);
 
   // editor state
   const [eventDialog, setEventDialog] = useState<{ open: boolean; editing: TeamEvent | null }>({
     open: false,
     editing: null,
   });
-  const [projectDialog, setProjectDialog] = useState<TeamTask | null>(null);
-  const [taskDialog, setTaskDialog] = useState<Task | null>(null);
-  const [pollDialog, setPollDialog] = useState<Poll | null>(null);
+  const [projectDialog, setProjectDialog] = useState<{ open: boolean; editing: TeamTask | null }>({
+    open: false,
+    editing: null,
+  });
+  const [taskDialog, setTaskDialog] = useState<{ open: boolean; editing: Task | null }>({
+    open: false,
+    editing: null,
+  });
+  const [pollDialog, setPollDialog] = useState<{ open: boolean; editing: Poll | null }>({
+    open: false,
+    editing: null,
+  });
 
   const allItems = useMemo<CalItem[]>(() => {
     const items: CalItem[] = [];
@@ -178,13 +188,13 @@ export default function CalendarPage() {
       const e = events.find((x) => x.id === it.id) ?? null;
       setEventDialog({ open: true, editing: e });
     } else if (it.kind === "project") {
-      setProjectDialog(tasks.find((x) => x.id === it.id) ?? null);
+      setProjectDialog({ open: true, editing: tasks.find((x) => x.id === it.id) ?? null });
     } else if (it.kind === "task") {
-      setTaskDialog(taskItems.find((x) => x.id === it.id) ?? null);
+      setTaskDialog({ open: true, editing: taskItems.find((x) => x.id === it.id) ?? null });
     } else {
-      setPollDialog(polls.find((x) => x.id === it.id) ?? null);
+      setPollDialog({ open: true, editing: polls.find((x) => x.id === it.id) ?? null });
     }
-    setSelectedDay(null);
+    setDayPanelOpen(false);
   }
 
   const dayItems = selectedDay ? itemsByDate[selectedDay] ?? [] : [];
@@ -275,7 +285,7 @@ export default function CalendarPage() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => items.length && setSelectedDay(key)}
+                  onClick={() => { if (items.length) { setSelectedDay(key); setDayPanelOpen(true); } }}
                   className={`flex min-h-[68px] flex-col gap-1 rounded-lg border p-1.5 text-left transition-colors ${
                     items.length ? "hover:border-signal-dim" : "cursor-default"
                   } ${isToday ? "border-signal/60 bg-signal-dim/20" : "border-edge"}`}
@@ -336,8 +346,8 @@ export default function CalendarPage() {
       {/* Day panel */}
       {selectedDay ? (
         <SlideOver
-          open
-          onClose={() => setSelectedDay(null)}
+          open={dayPanelOpen}
+          onClose={() => setDayPanelOpen(false)}
           title={formatDateDisplay(selectedDay)}
         >
           <div className="space-y-2">
@@ -364,22 +374,27 @@ export default function CalendarPage() {
         </SlideOver>
       ) : null}
 
-      {eventDialog.open ? (
-        <EventDialog
-          editing={eventDialog.editing}
-          defaultDate={selectedDay ?? undefined}
-          onClose={() => setEventDialog({ open: false, editing: null })}
-        />
-      ) : null}
-      {projectDialog ? (
-        <ProjectDialog editing={projectDialog} onClose={() => setProjectDialog(null)} />
-      ) : null}
-      {taskDialog ? (
-        <TaskDialog editing={taskDialog} onClose={() => setTaskDialog(null)} />
-      ) : null}
-      {pollDialog ? (
-        <PollDialog editing={pollDialog} onClose={() => setPollDialog(null)} />
-      ) : null}
+      <EventDialog
+        open={eventDialog.open}
+        editing={eventDialog.editing}
+        defaultDate={selectedDay ?? undefined}
+        onClose={() => setEventDialog({ open: false, editing: null })}
+      />
+      <ProjectDialog
+        open={projectDialog.open}
+        editing={projectDialog.editing}
+        onClose={() => setProjectDialog({ open: false, editing: null })}
+      />
+      <TaskDialog
+        open={taskDialog.open}
+        editing={taskDialog.editing}
+        onClose={() => setTaskDialog({ open: false, editing: null })}
+      />
+      <PollDialog
+        open={pollDialog.open}
+        editing={pollDialog.editing}
+        onClose={() => setPollDialog({ open: false, editing: null })}
+      />
     </div>
   );
 }

@@ -29,13 +29,14 @@ function toDateInput(ts?: number): string {
   ).padStart(2, "0")}`;
 }
 
-// Mounted only while open, so state initializes once from props.
 export function PollDialog({
   onClose,
   editing,
+  open = true,
 }: {
   onClose: () => void;
   editing?: Poll | null;
+  open?: boolean;
 }) {
   const { currentUser, addPoll, updatePoll, deletePoll } = useApp();
 
@@ -111,8 +112,9 @@ export function PollDialog({
 
   return (
     <Dialog
-      open
+      open={open}
       onClose={onClose}
+      onSubmit={handleSave}
       title={editing ? "Edit poll" : "New poll"}
       footer={
         <>
