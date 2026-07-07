@@ -4,9 +4,12 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
+import { useGotoHotkeys } from "./useGotoHotkeys";
+import { HotkeyCheatsheet } from "./HotkeyCheatsheet";
 
 export function BetaShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  useGotoHotkeys();
 
   return (
     <div className="flex min-h-screen">
@@ -63,6 +66,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
           </Link>
         </footer>
       </div>
+      <HotkeyCheatsheet />
     </div>
   );
 }
