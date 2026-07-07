@@ -150,6 +150,20 @@ export default function CalendarPage() {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [allItems]);
 
+  const upcomingAll = useMemo(() => {
+    const items: CalItem[] = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const startTs = start.getTime();
+    events.forEach((e) => {
+      items.push({ kind: "event", id: e.id, title: e.title, color: getEventTypeColor(e.type), label: getEventTypeLabel(e.type), date: e.date, time: formatEventTimeRange(e) });
+    });
+    tasks.forEach((p) => { if (!p.dueDate) return; items.push({ kind: "project", id: p.id, title: p.name, color: p.color, label: "Project due", date: p.dueDate }); });
+    taskItems.forEach((t) => { if (!t.dueDate) return; items.push({ kind: "task", id: t.id, title: t.title, color: t.color, label: "Task due", date: t.dueDate, time: t.dueTime ? formatTime12h(t.dueTime) : undefined }); });
+    polls.forEach((p) => { if (!p.closesAt) return; items.push({ kind: "poll", id: p.id, title: p.question, color: "#AF52DE", label: "Poll closes", date: dateStrFromTs(p.closesAt), time: formatTime12h(`${pad2(new Date(p.closesAt).getHours())}:${pad2(new Date(p.closesAt).getMinutes())}`) }); });
+    return items.filter((it) => new Date(`${it.date}T00:00:00`).getTime() >= startTs);
+  }, [events, tasks, taskItems, polls]);
+
   const days = useMemo(() => getCalendarDays(year, month), [year, month]);
 
   function toggleKind(k: CalKind) {
@@ -306,25 +320,27 @@ export default function CalendarPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {enabled.size === 0 ? (
-            <EmptyState
-              title="All categories hidden"
-              subtitle="Toggle a category above to show upcoming items."
-              action={{
-                label: "Show all",
-                onClick: () =>
-                  setEnabled(new Set<CalKind>(["event", "project", "task", "poll"])),
-              }}
-            />
-          ) : upcoming.length === 0 ? (
-            <EmptyState
-              title="Nothing upcoming"
-              subtitle="No events, due dates, or poll closings scheduled from today onward."
-              action={{
-                label: "Add event",
-                onClick: () => setEventDialog({ open: true, editing: null }),
-              }}
-            />
+          {upcoming.length === 0 ? (
+            enabled.size === 0 || upcomingAll.length > upcoming.length ? (
+              <EmptyState
+                title="All categories hidden"
+                subtitle="Some upcoming items are hidden. Toggle a category above to see them."
+                action={{
+                  label: "Show all",
+                  onClick: () =>
+                    setEnabled(new Set<CalKind>(["event", "project", "task", "poll"])),
+                }}
+              />
+            ) : (
+              <EmptyState
+                title="Nothing upcoming"
+                subtitle="No events, due dates, or poll closings scheduled from today onward."
+                action={{
+                  label: "Add event",
+                  onClick: () => setEventDialog({ open: true, editing: null }),
+                }}
+              />
+            )
           ) : (
             upcoming.map((it) => (
               <button
