@@ -29,6 +29,7 @@ import {
   getUserPollVotes,
 } from "@/lib/beta/types";
 import { Card, Pill, ProgressBar, StageBadge } from "./_components/ui";
+import { WelcomePrimer } from "./_components/WelcomePrimer";
 
 function daysUntil(dateStr: string): number {
   const today = new Date();
@@ -244,6 +245,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
+      <WelcomePrimer />
       <header>
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           {greetingPhrase()}, {greetingName}
