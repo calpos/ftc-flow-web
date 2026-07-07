@@ -308,7 +308,7 @@ export default function CalendarPage() {
                     {day}
                   </span>
                   <div className="flex flex-wrap gap-1">
-                    {items.slice(0, 4).map((it, i) => {
+                    {items.slice(0, 4).map((it) => {
                       const isLive = it.kind === 'event' && (() => { const ev = events.find(x => x.id === it.id); return ev ? getEventStatus(ev, now).state === 'live' : false; })();
                       if (isLive) {
                         return (

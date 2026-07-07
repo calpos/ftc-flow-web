@@ -23,13 +23,13 @@ function useAnimatedPresence(open: boolean, duration: number): { mounted: boolea
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (open) {
-      setMounted(true);
-      if (reduced) {
-        setVisible(true);
-        return;
-      }
       let rAF2 = 0;
       const rAF1 = requestAnimationFrame(() => {
+        setMounted(true);
+        if (reduced) {
+          setVisible(true);
+          return;
+        }
         rAF2 = requestAnimationFrame(() => setVisible(true));
       });
       return () => {
@@ -37,13 +37,19 @@ function useAnimatedPresence(open: boolean, duration: number): { mounted: boolea
         cancelAnimationFrame(rAF2);
       };
     } else {
-      setVisible(false);
-      if (reduced) {
-        setMounted(false);
-        return;
-      }
-      const id = setTimeout(() => setMounted(false), duration + 20);
-      return () => clearTimeout(id);
+      let timeoutId = 0;
+      const rAF = requestAnimationFrame(() => {
+        setVisible(false);
+        if (reduced) {
+          setMounted(false);
+          return;
+        }
+        timeoutId = window.setTimeout(() => setMounted(false), duration + 20);
+      });
+      return () => {
+        cancelAnimationFrame(rAF);
+        clearTimeout(timeoutId);
+      };
     }
   }, [open, duration]);
 
