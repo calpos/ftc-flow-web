@@ -4,6 +4,7 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
+import { ToastRegion } from "./ToastRegion";
 
 export function BetaShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -63,6 +64,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
           </Link>
         </footer>
       </div>
+      <ToastRegion />
     </div>
   );
 }
