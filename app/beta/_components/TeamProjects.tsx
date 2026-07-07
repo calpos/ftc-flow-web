@@ -26,6 +26,7 @@ export function TeamProjects() {
     editing: null,
   });
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [taskDialog, setTaskDialog] = useState<{
     open: boolean;
     editing: Task | null;
@@ -68,26 +69,26 @@ export function TeamProjects() {
               project={p}
               taskItems={taskItems}
               members={members}
-              onOpen={() => setDetailId(p.id)}
+              onOpen={() => { setDetailId(p.id); setDetailOpen(true); }}
             />
           ))}
         </div>
       )}
 
-      {projectDialog.open ? (
-        <ProjectDialog
-          editing={projectDialog.editing}
-          onClose={() => setProjectDialog({ open: false, editing: null })}
-        />
-      ) : null}
+      <ProjectDialog
+        open={projectDialog.open}
+        editing={projectDialog.editing}
+        onClose={() => setProjectDialog({ open: false, editing: null })}
+      />
 
       {detail ? (
         <ProjectDetail
+          open={detailOpen}
           project={detail}
-          onClose={() => setDetailId(null)}
+          onClose={() => setDetailOpen(false)}
           onEdit={() => {
             setProjectDialog({ open: true, editing: detail });
-            setDetailId(null);
+            setDetailOpen(false);
           }}
           onAddTask={() => setTaskDialog({ open: true, editing: null, parentId: detail.id })}
           onOpenTask={(taskId) => {
@@ -97,13 +98,12 @@ export function TeamProjects() {
         />
       ) : null}
 
-      {taskDialog.open ? (
-        <TaskDialog
-          editing={taskDialog.editing}
-          defaultParentId={taskDialog.parentId}
-          onClose={() => setTaskDialog({ open: false, editing: null })}
-        />
-      ) : null}
+      <TaskDialog
+        open={taskDialog.open}
+        editing={taskDialog.editing}
+        defaultParentId={taskDialog.parentId}
+        onClose={() => setTaskDialog({ open: false, editing: null })}
+      />
     </div>
   );
 }

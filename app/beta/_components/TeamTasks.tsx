@@ -22,6 +22,7 @@ export function TeamTasks() {
     editing: null,
   });
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const filtered = useMemo(
     () =>
@@ -65,26 +66,26 @@ export function TeamTasks() {
               task={t}
               parent={t.parentProjectId ? tasks.find((p) => p.id === t.parentProjectId) : undefined}
               members={members}
-              onOpen={() => setDetailId(t.id)}
+              onOpen={() => { setDetailId(t.id); setDetailOpen(true); }}
             />
           ))}
         </div>
       )}
 
-      {dialog.open ? (
-        <TaskDialog
-          editing={dialog.editing}
-          onClose={() => setDialog({ open: false, editing: null })}
-        />
-      ) : null}
+      <TaskDialog
+        open={dialog.open}
+        editing={dialog.editing}
+        onClose={() => setDialog({ open: false, editing: null })}
+      />
 
       {detail ? (
         <TaskDetail
+          open={detailOpen}
           task={detail}
-          onClose={() => setDetailId(null)}
+          onClose={() => setDetailOpen(false)}
           onEdit={() => {
             setDialog({ open: true, editing: detail });
-            setDetailId(null);
+            setDetailOpen(false);
           }}
         />
       ) : null}

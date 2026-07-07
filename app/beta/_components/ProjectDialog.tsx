@@ -16,13 +16,14 @@ import {
 } from "./fields";
 import { newId } from "./util";
 
-// Mounted only while open, so state initializes once from props.
 export function ProjectDialog({
   onClose,
   editing,
+  open = true,
 }: {
   onClose: () => void;
   editing?: TeamTask | null;
+  open?: boolean;
 }) {
   const { currentUser, members, taskItems, addTask, updateProjectWithCascade, deleteTask } =
     useApp();
@@ -81,8 +82,9 @@ export function ProjectDialog({
 
   return (
     <Dialog
-      open
+      open={open}
       onClose={onClose}
+      onSubmit={handleSave}
       title={editing ? "Edit project" : "New project"}
       footer={
         <>

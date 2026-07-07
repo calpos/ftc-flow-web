@@ -9,16 +9,16 @@ import { Button } from "./ui";
 import { DateField, Field, TextAreaField, TextField, TimeField } from "./fields";
 import { newId } from "./util";
 
-// Mounted only while open (see parent), so state initializes once from props —
-// no reset effect needed.
 export function EventDialog({
   onClose,
   editing,
   defaultDate,
+  open = true,
 }: {
   onClose: () => void;
   editing?: TeamEvent | null;
   defaultDate?: string;
+  open?: boolean;
 }) {
   const { currentUser, addEvent, updateEvent, deleteEvent } = useApp();
 
@@ -62,8 +62,9 @@ export function EventDialog({
 
   return (
     <Dialog
-      open
+      open={open}
       onClose={onClose}
+      onSubmit={handleSave}
       title={editing ? "Edit event" : "New event"}
       footer={
         <>
