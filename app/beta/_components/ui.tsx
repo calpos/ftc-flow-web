@@ -266,11 +266,35 @@ export function EmptyState({
   icon,
   title,
   subtitle,
+  action,
+  compact = false,
 }: {
   icon?: ReactNode;
   title: string;
   subtitle?: string;
+  action?: { label: string; onClick: () => void };
+  compact?: boolean;
 }) {
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-dashed border-edge px-3.5 py-4">
+        {icon ? <span className="shrink-0 text-fg-dim">{icon}</span> : null}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-fg-mid">{title}</p>
+          {subtitle ? <p className="mt-0.5 text-xs text-fg-dim">{subtitle}</p> : null}
+        </div>
+        {action ? (
+          <button
+            type="button"
+            onClick={action.onClick}
+            className="shrink-0 rounded text-xs font-medium text-signal hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+          >
+            {action.label}
+          </button>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-edge px-6 py-16 text-center">
       {icon ? (
@@ -280,6 +304,15 @@ export function EmptyState({
       ) : null}
       <p className="font-medium text-fg-mid">{title}</p>
       {subtitle ? <p className="mt-1 max-w-sm text-sm text-fg-dim">{subtitle}</p> : null}
+      {action ? (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className="mt-5 inline-flex h-9 items-center gap-2 rounded-[10px] border border-edge bg-raised px-4 text-sm font-medium text-fg transition-colors hover:border-signal-dim hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+        >
+          {action.label}
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -306,8 +306,25 @@ export default function CalendarPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {upcoming.length === 0 ? (
-            <EmptyState title="Nothing upcoming" subtitle="Add an event or due date to see it here." />
+          {enabled.size === 0 ? (
+            <EmptyState
+              title="All categories hidden"
+              subtitle="Toggle a category above to show upcoming items."
+              action={{
+                label: "Show all",
+                onClick: () =>
+                  setEnabled(new Set<CalKind>(["event", "project", "task", "poll"])),
+              }}
+            />
+          ) : upcoming.length === 0 ? (
+            <EmptyState
+              title="Nothing upcoming"
+              subtitle="No events, due dates, or poll closings scheduled from today onward."
+              action={{
+                label: "Add event",
+                onClick: () => setEventDialog({ open: true, editing: null }),
+              }}
+            />
           ) : (
             upcoming.map((it) => (
               <button
@@ -341,25 +358,39 @@ export default function CalendarPage() {
           title={formatDateDisplay(selectedDay)}
         >
           <div className="space-y-2">
-            {dayItems.map((it) => (
-              <button
-                key={`${it.kind}-${it.id}`}
-                type="button"
-                onClick={() => openItem(it)}
-                className="flex w-full items-center justify-between gap-3 rounded-xl border border-edge bg-raised px-3.5 py-3 text-left transition-colors hover:border-signal-dim"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="h-8 w-1 rounded-full" style={{ backgroundColor: it.color }} />
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-fg">{it.title}</p>
-                    <Pill label={it.label} color={it.color} className="mt-1" />
+            {dayItems.length === 0 ? (
+              <EmptyState
+                title="No items visible"
+                subtitle="All categories for this day are hidden. Toggle a category above to see them."
+                action={{
+                  label: "Show all",
+                  onClick: () => {
+                    setEnabled(new Set<CalKind>(["event", "project", "task", "poll"]));
+                    setSelectedDay(null);
+                  },
+                }}
+              />
+            ) : (
+              dayItems.map((it) => (
+                <button
+                  key={`${it.kind}-${it.id}`}
+                  type="button"
+                  onClick={() => openItem(it)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-edge bg-raised px-3.5 py-3 text-left transition-colors hover:border-signal-dim"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="h-8 w-1 rounded-full" style={{ backgroundColor: it.color }} />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-fg">{it.title}</p>
+                      <Pill label={it.label} color={it.color} className="mt-1" />
+                    </div>
                   </div>
-                </div>
-                {it.time ? (
-                  <span className="shrink-0 text-xs text-fg-dim">{it.time}</span>
-                ) : null}
-              </button>
-            ))}
+                  {it.time ? (
+                    <span className="shrink-0 text-xs text-fg-dim">{it.time}</span>
+                  ) : null}
+                </button>
+              ))
+            )}
           </div>
         </SlideOver>
       ) : null}

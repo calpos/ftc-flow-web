@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, Users, X } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import {
   COMMON_TEAM_ROLES,
   COMMON_WORK_ROLES,
   TeamMember,
 } from "@/lib/beta/types";
-import { Avatar, Card } from "./ui";
+import { Avatar, Card, EmptyState } from "./ui";
 
 export function TeamMembers() {
   const { members, currentUser, currentUserId, updateMember } = useApp();
@@ -19,6 +19,16 @@ export function TeamMembers() {
     const rest = members.filter((m) => !m.isCoach);
     return [...coaches, ...rest];
   }, [members]);
+
+  if (ordered.length === 0) {
+    return (
+      <EmptyState
+        icon={<Users className="h-6 w-6" />}
+        title="No team members"
+        subtitle="No members have been added to this team yet."
+      />
+    );
+  }
 
   return (
     <Card className="divide-y divide-edge">
