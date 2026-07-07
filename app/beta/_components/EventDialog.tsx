@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import { EVENT_TYPE_INFO, EventType, TeamEvent } from "@/lib/beta/types";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui";
 import { DateField, Field, TextAreaField, TextField, TimeField } from "./fields";
-import { newId } from "./util";
+import { getEventStatus, newId } from "./util";
+
+function useNow(intervalMs = 60000): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
 
 export function EventDialog({
   onClose,
@@ -21,6 +30,8 @@ export function EventDialog({
   open?: boolean;
 }) {
   const { currentUser, addEvent, updateEvent, deleteEvent } = useApp();
+  const now = useNow();
+  const status = editing ? getEventStatus(editing, now) : null;
 
   const [title, setTitle] = useState(editing?.title ?? "");
   const [type, setType] = useState<EventType>(editing?.type ?? "meeting");
@@ -90,6 +101,21 @@ export function EventDialog({
       }
     >
       <div className="space-y-4">
+        {editing && status ? (
+          <div>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium"
+              style={{
+                borderColor: status.state === 'live' ? 'var(--color-signal)' : 'var(--color-edge)',
+                color: status.state === 'live' ? 'var(--color-signal)' : status.state === 'ended' ? 'var(--color-fg-dim)' : 'var(--color-fg-mid)',
+                backgroundColor: status.state === 'live' ? 'var(--color-signal-dim)' : 'transparent',
+              }}
+            >
+              {status.state === 'live' ? <span className="h-1.5 w-1.5 animate-ping rounded-full bg-current opacity-75" /> : null}
+              {status.label}
+            </span>
+          </div>
+        ) : null}
         <TextField label="Title" value={title} onChange={setTitle} placeholder="Weekly team meeting" />
         <Field label="Type">
           <div className="flex flex-wrap gap-2">
