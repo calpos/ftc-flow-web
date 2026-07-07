@@ -21,17 +21,32 @@ export function TeamMembers() {
   }, [members]);
 
   return (
-    <Card className="divide-y divide-edge">
-      {ordered.map((m) => (
-        <MemberRow
-          key={m.id}
-          member={m}
-          isSelf={m.id === currentUserId}
-          viewerIsCoach={isCoach}
-          onUpdate={updateMember}
-        />
-      ))}
-    </Card>
+    <>
+      <Card className="divide-y divide-edge lg:hidden">
+        {ordered.map((m) => (
+          <MemberRow
+            key={m.id}
+            member={m}
+            isSelf={m.id === currentUserId}
+            viewerIsCoach={isCoach}
+            onUpdate={updateMember}
+          />
+        ))}
+      </Card>
+      <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4">
+        {ordered.map((m) => (
+          <Card key={m.id}>
+            <MemberRow
+              member={m}
+              isSelf={m.id === currentUserId}
+              viewerIsCoach={isCoach}
+              onUpdate={updateMember}
+              avatarSize={48}
+            />
+          </Card>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -40,11 +55,13 @@ function MemberRow({
   isSelf,
   viewerIsCoach,
   onUpdate,
+  avatarSize = 40,
 }: {
   member: TeamMember;
   isSelf: boolean;
   viewerIsCoach: boolean;
   onUpdate: (m: TeamMember) => void;
+  avatarSize?: number;
 }) {
   const [adding, setAdding] = useState(false);
   const canEditWorkRoles = isSelf && !member.isCoach;
@@ -64,7 +81,7 @@ function MemberRow({
 
   return (
     <div className="flex items-start gap-3 p-4">
-      <Avatar member={member} size={40} />
+      <Avatar member={member} size={avatarSize} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="font-medium text-fg">
