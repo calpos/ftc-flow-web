@@ -7,6 +7,7 @@ import {
   getProgressLabel,
   getProgressLabelColor,
 } from "@/lib/beta/types";
+import { memberBadgeColors } from "@/lib/beta/memberColors";
 
 /* ----------------------------------------------------------------- Avatar */
 
@@ -19,16 +20,17 @@ export function Avatar({
   size = 36,
   ring = false,
 }: {
-  member: Pick<TeamMember, "firstName" | "lastName">;
+  member: Pick<TeamMember, "id" | "firstName" | "lastName">;
   size?: number;
   ring?: boolean;
 }) {
+  const { bg, text } = memberBadgeColors(member.id);
   return (
     <span
-      className={`grid shrink-0 place-items-center rounded-full bg-raised font-medium text-signal ${
+      className={`grid shrink-0 place-items-center rounded-full font-medium ${
         ring ? "ring-2 ring-surface" : ""
       }`}
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.36), backgroundColor: bg, color: text }}
     >
       {initialsOf(member)}
     </span>
