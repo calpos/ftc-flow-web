@@ -4,15 +4,20 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
+import { useSidebarCollapsed } from "./useSidebarCollapsed";
 
 export function BetaShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useSidebarCollapsed();
 
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-edge bg-surface lg:block">
-        <Sidebar />
+      <aside
+        style={{ width: collapsed ? "4.5rem" : "16rem" }}
+        className="sticky top-0 hidden h-screen shrink-0 border-r border-edge bg-surface lg:block transition-[width] duration-200 ease-in-out motion-reduce:transition-none"
+      >
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       </aside>
 
       {/* Mobile drawer */}
