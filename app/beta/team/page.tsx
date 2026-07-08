@@ -18,8 +18,11 @@ export default function TeamPage() {
   // it), so reading window here is safe and avoids a setState-in-effect.
   const [tab, setTab] = useState<Tab>(() => {
     if (typeof window === "undefined") return "members";
-    const param = new URLSearchParams(window.location.search).get("tab");
-    return param && VALID.includes(param as Tab) ? (param as Tab) : "members";
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("project")) return "projects";
+    if (params.get("task")) return "tasks";
+    const p = params.get("tab");
+    return p && VALID.includes(p as Tab) ? (p as Tab) : "members";
   });
 
   const options: TabOption<Tab>[] = [
@@ -41,7 +44,14 @@ export default function TeamPage() {
       <SegmentedTabs options={options} value={tab} onChange={setTab} />
 
       {tab === "members" ? <TeamMembers /> : null}
-      {tab === "projects" ? <TeamProjects /> : null}
+      {tab === "projects" ? (
+        <TeamProjects
+          onStaleCleared={() => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("task")) setTab("tasks");
+          }}
+        />
+      ) : null}
       {tab === "tasks" ? <TeamTasks /> : null}
       {tab === "polls" ? <TeamPolls /> : null}
     </div>

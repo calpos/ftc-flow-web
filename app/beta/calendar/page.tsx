@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import {
@@ -21,6 +22,7 @@ import { EventDialog } from "../_components/EventDialog";
 import { ProjectDialog } from "../_components/ProjectDialog";
 import { TaskDialog } from "../_components/TaskDialog";
 import { PollDialog } from "../_components/PollDialog";
+import { useDetailParam } from "../_components/useDetailParam";
 
 type CalKind = "event" | "project" | "task" | "poll";
 
@@ -52,9 +54,15 @@ function dateStrFromTs(ts: number) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
-export default function CalendarPage() {
+const ITEM_PARAM_KEYS = ["event", "project", "task", "poll"] as const;
+
+function CalendarContent() {
   const { events, tasks, taskItems, polls } = useApp();
   const today = new Date();
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [view, setView] = useState<"month" | "upcoming">("month");
   const [year, setYear] = useState(today.getFullYear());
@@ -62,16 +70,37 @@ export default function CalendarPage() {
   const [enabled, setEnabled] = useState<Set<CalKind>>(
     new Set<CalKind>(["event", "project", "task", "poll"]),
   );
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [newEventOpen, setNewEventOpen] = useState(false);
 
-  // editor state
-  const [eventDialog, setEventDialog] = useState<{ open: boolean; editing: TeamEvent | null }>({
-    open: false,
-    editing: null,
-  });
-  const [projectDialog, setProjectDialog] = useState<TeamTask | null>(null);
-  const [taskDialog, setTaskDialog] = useState<Task | null>(null);
-  const [pollDialog, setPollDialog] = useState<Poll | null>(null);
+  const eventParam = useDetailParam("event");
+  const projectParam = useDetailParam("project");
+  const taskParam = useDetailParam("task");
+  const pollParam = useDetailParam("poll");
+  const dayParam = useDetailParam("day");
+
+  const editingEvent = events.find((e) => e.id === eventParam.value) ?? null;
+  const editingProject = tasks.find((p) => p.id === projectParam.value) ?? null;
+  const editingTask = taskItems.find((t) => t.id === taskParam.value) ?? null;
+  const editingPoll = polls.find((p) => p.id === pollParam.value) ?? null;
+  const selectedDay = dayParam.value;
+
+  const { value: eventValue, close: eventClose } = eventParam;
+  const { value: projectValue, close: projectClose } = projectParam;
+  const { value: taskValue, close: taskClose } = taskParam;
+  const { value: pollValue, close: pollClose } = pollParam;
+
+  useEffect(() => {
+    if (eventValue && !editingEvent) eventClose();
+  }, [eventValue, editingEvent, eventClose]);
+  useEffect(() => {
+    if (projectValue && !editingProject) projectClose();
+  }, [projectValue, editingProject, projectClose]);
+  useEffect(() => {
+    if (taskValue && !editingTask) taskClose();
+  }, [taskValue, editingTask, taskClose]);
+  useEffect(() => {
+    if (pollValue && !editingPoll) pollClose();
+  }, [pollValue, editingPoll, pollClose]);
 
   const allItems = useMemo<CalItem[]>(() => {
     const items: CalItem[] = [];
@@ -174,17 +203,10 @@ export default function CalendarPage() {
   }
 
   function openItem(it: CalItem) {
-    if (it.kind === "event") {
-      const e = events.find((x) => x.id === it.id) ?? null;
-      setEventDialog({ open: true, editing: e });
-    } else if (it.kind === "project") {
-      setProjectDialog(tasks.find((x) => x.id === it.id) ?? null);
-    } else if (it.kind === "task") {
-      setTaskDialog(taskItems.find((x) => x.id === it.id) ?? null);
-    } else {
-      setPollDialog(polls.find((x) => x.id === it.id) ?? null);
-    }
-    setSelectedDay(null);
+    const params = new URLSearchParams(searchParams.toString());
+    ITEM_PARAM_KEYS.forEach((k) => params.delete(k));
+    params.set(it.kind, it.id);
+    router.push(`${pathname}?${params.toString()}`);
   }
 
   const dayItems = selectedDay ? itemsByDate[selectedDay] ?? [] : [];
@@ -196,7 +218,7 @@ export default function CalendarPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
           <p className="mt-1 text-fg-mid">Events, due dates, and poll closings.</p>
         </div>
-        <Button onClick={() => setEventDialog({ open: true, editing: null })}>
+        <Button onClick={() => setNewEventOpen(true)}>
           <Plus className="h-4 w-4" /> New event
         </Button>
       </header>
@@ -275,7 +297,7 @@ export default function CalendarPage() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => items.length && setSelectedDay(key)}
+                  onClick={() => items.length && dayParam.open(key)}
                   className={`flex min-h-[68px] flex-col gap-1 rounded-lg border p-1.5 text-left transition-colors ${
                     items.length ? "hover:border-signal-dim" : "cursor-default"
                   } ${isToday ? "border-signal/60 bg-signal-dim/20" : "border-edge"}`}
@@ -337,7 +359,7 @@ export default function CalendarPage() {
       {selectedDay ? (
         <SlideOver
           open
-          onClose={() => setSelectedDay(null)}
+          onClose={() => dayParam.close()}
           title={formatDateDisplay(selectedDay)}
         >
           <div className="space-y-2">
@@ -364,22 +386,30 @@ export default function CalendarPage() {
         </SlideOver>
       ) : null}
 
-      {eventDialog.open ? (
+      {newEventOpen || eventParam.value ? (
         <EventDialog
-          editing={eventDialog.editing}
+          editing={editingEvent}
           defaultDate={selectedDay ?? undefined}
-          onClose={() => setEventDialog({ open: false, editing: null })}
+          onClose={() => {
+            if (newEventOpen) setNewEventOpen(false);
+            else eventParam.close();
+          }}
         />
-      ) : null}
-      {projectDialog ? (
-        <ProjectDialog editing={projectDialog} onClose={() => setProjectDialog(null)} />
-      ) : null}
-      {taskDialog ? (
-        <TaskDialog editing={taskDialog} onClose={() => setTaskDialog(null)} />
-      ) : null}
-      {pollDialog ? (
-        <PollDialog editing={pollDialog} onClose={() => setPollDialog(null)} />
+      ) : projectParam.value ? (
+        <ProjectDialog editing={editingProject} onClose={() => projectParam.close()} />
+      ) : taskParam.value ? (
+        <TaskDialog editing={editingTask} onClose={() => taskParam.close()} />
+      ) : pollParam.value ? (
+        <PollDialog editing={editingPoll} onClose={() => pollParam.close()} />
       ) : null}
     </div>
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <Suspense fallback={null}>
+      <CalendarContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Folder } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import { Task, TeamTask } from "@/lib/beta/types";
@@ -15,8 +15,9 @@ import { ProjectCard } from "./cards";
 import { ProjectDetail } from "./details";
 import { ProjectDialog } from "./ProjectDialog";
 import { TaskDialog } from "./TaskDialog";
+import { useDetailParam } from "./useDetailParam";
 
-export function TeamProjects() {
+function TeamProjectsContent({ onStaleCleared }: { onStaleCleared?: () => void }) {
   const { tasks, taskItems, members, currentUserId } = useApp();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<TaskFilters>(() => createDefaultTaskFilters());
@@ -25,19 +26,27 @@ export function TeamProjects() {
     open: false,
     editing: null,
   });
-  const [detailId, setDetailId] = useState<string | null>(null);
   const [taskDialog, setTaskDialog] = useState<{
     open: boolean;
     editing: Task | null;
     parentId?: string;
   }>({ open: false, editing: null });
 
+  const param = useDetailParam("project");
+  const detail = tasks.find((p) => p.id === param.value) ?? null;
+  const { value: paramValue, close: paramClose } = param;
+
+  useEffect(() => {
+    if (paramValue && !detail) {
+      paramClose();
+      onStaleCleared?.();
+    }
+  }, [paramValue, detail, paramClose, onStaleCleared]);
+
   const filtered = useMemo(
     () => getFilteredAndSortedTasks({ tasks, searchQuery: search, filters, currentUserId }),
     [tasks, search, filters, currentUserId],
   );
-
-  const detail = detailId ? tasks.find((p) => p.id === detailId) ?? null : null;
 
   return (
     <div className="space-y-4">
@@ -68,7 +77,7 @@ export function TeamProjects() {
               project={p}
               taskItems={taskItems}
               members={members}
-              onOpen={() => setDetailId(p.id)}
+              onOpen={() => param.open(p.id)}
             />
           ))}
         </div>
@@ -84,10 +93,10 @@ export function TeamProjects() {
       {detail ? (
         <ProjectDetail
           project={detail}
-          onClose={() => setDetailId(null)}
+          onClose={() => param.close()}
           onEdit={() => {
             setProjectDialog({ open: true, editing: detail });
-            setDetailId(null);
+            param.close();
           }}
           onAddTask={() => setTaskDialog({ open: true, editing: null, parentId: detail.id })}
           onOpenTask={(taskId) => {
@@ -105,5 +114,13 @@ export function TeamProjects() {
         />
       ) : null}
     </div>
+  );
+}
+
+export function TeamProjects({ onStaleCleared }: { onStaleCleared?: () => void }) {
+  return (
+    <Suspense fallback={null}>
+      <TeamProjectsContent onStaleCleared={onStaleCleared} />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { CheckSquare } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import { Task } from "@/lib/beta/types";
@@ -11,8 +11,9 @@ import { WorkFilterBar } from "./WorkFilterBar";
 import { TaskCard } from "./cards";
 import { TaskDetail } from "./details";
 import { TaskDialog } from "./TaskDialog";
+import { useDetailParam } from "./useDetailParam";
 
-export function TeamTasks() {
+function TeamTasksContent() {
   const { tasks, taskItems, members, currentUserId } = useApp();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<TaskFilters>(() => createDefaultTaskFilters());
@@ -21,7 +22,14 @@ export function TeamTasks() {
     open: false,
     editing: null,
   });
-  const [detailId, setDetailId] = useState<string | null>(null);
+
+  const param = useDetailParam("task");
+  const detail = taskItems.find((t) => t.id === param.value) ?? null;
+  const { value: paramValue, close: paramClose } = param;
+
+  useEffect(() => {
+    if (paramValue && !detail) paramClose();
+  }, [paramValue, detail, paramClose]);
 
   const filtered = useMemo(
     () =>
@@ -33,8 +41,6 @@ export function TeamTasks() {
       }),
     [taskItems, search, filters, currentUserId],
   );
-
-  const detail = detailId ? taskItems.find((t) => t.id === detailId) ?? null : null;
 
   return (
     <div className="space-y-4">
@@ -65,7 +71,7 @@ export function TeamTasks() {
               task={t}
               parent={t.parentProjectId ? tasks.find((p) => p.id === t.parentProjectId) : undefined}
               members={members}
-              onOpen={() => setDetailId(t.id)}
+              onOpen={() => param.open(t.id)}
             />
           ))}
         </div>
@@ -81,13 +87,21 @@ export function TeamTasks() {
       {detail ? (
         <TaskDetail
           task={detail}
-          onClose={() => setDetailId(null)}
+          onClose={() => param.close()}
           onEdit={() => {
             setDialog({ open: true, editing: detail });
-            setDetailId(null);
+            param.close();
           }}
         />
       ) : null}
     </div>
+  );
+}
+
+export function TeamTasks() {
+  return (
+    <Suspense fallback={null}>
+      <TeamTasksContent />
+    </Suspense>
   );
 }
