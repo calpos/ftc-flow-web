@@ -376,6 +376,17 @@ export function getPollOptionCounts(p: Poll): Record<string, number> {
   return c;
 }
 
+export function getPollWinners(poll: Poll): string[] {
+  const counts = getPollOptionCounts(poll);
+  const totalVoters = getPollTotalVoters(poll);
+  if (totalVoters === 0) return [];
+  const max = Math.max(...Object.values(counts));
+  if (max === 0) return [];
+  return Object.entries(counts)
+    .filter(([, c]) => c === max)
+    .map(([id]) => id);
+}
+
 export function migratePoll(p: Record<string, unknown>): Poll {
   const rawOptions = (p.options as Record<string, unknown>[]) || [];
   const rawVotes = (p.votes as Record<string, unknown>) || {};
