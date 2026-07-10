@@ -223,27 +223,51 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+function parseDateStrLocal(dateStr: string): Date | null {
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return null;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+  return new Date(y, m, d);
+}
+
 export function formatDateDisplay(dateStr: string): string {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
+  const d = parseDateStrLocal(dateStr);
+  if (!d) return dateStr;
   const month = MONTH_NAMES[d.getMonth()];
   const day = d.getDate();
   return `${month} ${day}${getOrdinalSuffix(day)}`;
 }
 
 export function getDaysAwayText(dateStr: string): string {
-  const target = new Date(dateStr);
-  if (isNaN(target.getTime())) return "";
+  const target = parseDateStrLocal(dateStr);
+  if (!target) return "";
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const targetStart = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-  const diffMs = targetStart.getTime() - todayStart.getTime();
+  const diffMs = target.getTime() - todayStart.getTime();
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "1 day away";
   if (diffDays > 1) return `${diffDays} days away`;
   if (diffDays === -1) return "1 day ago";
   return `${Math.abs(diffDays)} days ago`;
+}
+
+export type DeadlineUrgency = "overdue" | "today" | "due-soon" | "normal";
+
+export function getDeadlineUrgency(dateStr: string, isCompleted: boolean): DeadlineUrgency | null {
+  if (isCompleted || !dateStr) return null;
+  const target = parseDateStrLocal(dateStr);
+  if (!target) return null;
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((target.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return "overdue";
+  if (diffDays === 0) return "today";
+  if (diffDays <= 3) return "due-soon";
+  return "normal";
 }
 
 export interface PollOption {
