@@ -4,6 +4,8 @@ import React, { ReactNode, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
+import { useGotoHotkeys } from "./useGotoHotkeys";
+import { HotkeyCheatsheet } from "./HotkeyCheatsheet";
 import { CommandPalette } from "./CommandPalette";
 
 const FOCUSABLE_SELECTORS =
@@ -85,6 +87,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
   const dur = reducedMotion ? "0s" : "0.25s";
 
   const [paletteOpen, setPaletteOpen] = useState(false);
+  useGotoHotkeys();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -174,6 +177,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
           </Link>
         </footer>
       </div>
+      <HotkeyCheatsheet />
     </div>
   );
 }
