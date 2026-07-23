@@ -187,6 +187,12 @@ export function Sidebar({
             Reset demo data
           </button>
         )}
+        {collapsed ? null : (
+          <div className="flex items-center justify-center gap-1.5 text-xs text-fg-dim">
+            <kbd className="rounded-md bg-raised border border-edge px-1.5 py-0.5 font-mono text-xs text-fg-mid">?</kbd>
+            <span>keyboard shortcuts</span>
+          </div>
+        )}
       </div>
     </div>
   );
