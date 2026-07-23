@@ -14,6 +14,7 @@ import {
 import { useApp } from "@/lib/beta/store/hooks";
 import { MOCK_TEAM_NAME, MOCK_TEAM_NUMBER } from "@/lib/beta/mocks";
 import {
+  DeadlineUrgency,
   Task,
   TeamEvent,
   TeamTask,
@@ -21,6 +22,7 @@ import {
   formatEventTimeRange,
   formatProgress,
   getDaysAwayText,
+  getDeadlineUrgency,
   getEventStartTimestamp,
   getEventTypeColor,
   getEventTypeLabel,
@@ -28,7 +30,7 @@ import {
   getTaskItemProgress,
   getUserPollVotes,
 } from "@/lib/beta/types";
-import { Card, Pill, ProgressBar, StageBadge } from "./_components/ui";
+import { Card, DeadlineInline, Pill, ProgressBar, StageBadge } from "./_components/ui";
 
 function daysUntil(dateStr: string): number {
   const today = new Date();
@@ -76,6 +78,7 @@ interface UpcomingItem {
   sortDay: number;
   hasTime: boolean;
   sortTime: number;
+  urgency?: DeadlineUrgency | null;
 }
 
 export default function HomePage() {
@@ -177,6 +180,7 @@ export default function HomePage() {
         sortDay: tsForDateOnly(e.date),
         hasTime: true,
         sortTime: ts,
+        urgency: null,
       });
     });
     tasks.forEach((t) => {
@@ -193,6 +197,7 @@ export default function HomePage() {
         sortDay: dayTs,
         hasTime: false,
         sortTime: dayTs,
+        urgency: getDeadlineUrgency(t.dueDate, getProjectProgress(t, taskItems) >= 100),
       });
     });
     taskItems.forEach((t) => {
@@ -209,6 +214,7 @@ export default function HomePage() {
         sortDay: dayTs,
         hasTime: false,
         sortTime: dayTs,
+        urgency: getDeadlineUrgency(t.dueDate, getTaskItemProgress(t) >= 100),
       });
     });
     polls.forEach((p) => {
@@ -225,6 +231,7 @@ export default function HomePage() {
         sortDay: dayTs,
         hasTime: true,
         sortTime: p.closesAt,
+        urgency: null,
       });
     });
 
@@ -331,7 +338,7 @@ export default function HomePage() {
                 <p className="truncate text-sm font-medium text-fg">{u.title}</p>
                 <Pill label={u.label} color={u.color} className="mt-1.5" />
               </div>
-              <span className="shrink-0 text-right text-xs text-fg-dim">{u.date}</span>
+              <DeadlineInline text={u.date} urgency={u.urgency ?? null} />
             </Link>
           ))}
         </ListPanel>
@@ -487,9 +494,10 @@ function WorkItemRow({
       <div className="mt-2 flex items-center justify-between">
         <StageBadge progress={progress} />
         {dueDate ? (
-          <span className="text-xs text-fg-dim">
-            {formatDateDisplay(dueDate)} · {getDaysAwayText(dueDate)}
-          </span>
+          <DeadlineInline
+            text={`${formatDateDisplay(dueDate)} · ${getDaysAwayText(dueDate)}`}
+            urgency={getDeadlineUrgency(dueDate, progress === 100)}
+          />
         ) : null}
       </div>
     </Link>
