@@ -9,6 +9,7 @@ import {
   formatProgress,
   formatTime12h,
   getDaysAwayText,
+  getDeadlineUrgency,
   getProjectProgress,
   getTaskItemProgress,
 } from "@/lib/beta/types";
@@ -124,11 +125,17 @@ export function TaskDetail({
         {task.dueDate ? (
           <div>
             <SectionLabel>Due</SectionLabel>
-            <p className="text-sm text-fg">
-              {formatDateDisplay(task.dueDate)}
-              {task.dueTime ? ` · ${formatTime12h(task.dueTime)}` : ""}
-              <span className="ml-2 text-fg-dim">{getDaysAwayText(task.dueDate)}</span>
-            </p>
+            {(() => {
+              const u = getDeadlineUrgency(task.dueDate, progress === 100);
+              const relCls = (u === "overdue" || u === "today") ? "ml-2 text-danger" : u === "due-soon" ? "ml-2 text-warning" : "ml-2 text-fg-dim";
+              return (
+                <p className="text-sm text-fg">
+                  {formatDateDisplay(task.dueDate)}
+                  {task.dueTime ? ` · ${formatTime12h(task.dueTime)}` : ""}
+                  <span className={relCls}>{getDaysAwayText(task.dueDate)}</span>
+                </p>
+              );
+            })()}
           </div>
         ) : null}
 
@@ -254,10 +261,16 @@ export function ProjectDetail({
         {project.dueDate ? (
           <div>
             <SectionLabel>Target date</SectionLabel>
-            <p className="text-sm text-fg">
-              {formatDateDisplay(project.dueDate)}
-              <span className="ml-2 text-fg-dim">{getDaysAwayText(project.dueDate)}</span>
-            </p>
+            {(() => {
+              const u = getDeadlineUrgency(project.dueDate, progress === 100);
+              const relCls = (u === "overdue" || u === "today") ? "ml-2 text-danger" : u === "due-soon" ? "ml-2 text-warning" : "ml-2 text-fg-dim";
+              return (
+                <p className="text-sm text-fg">
+                  {formatDateDisplay(project.dueDate)}
+                  <span className={relCls}>{getDaysAwayText(project.dueDate)}</span>
+                </p>
+              );
+            })()}
           </div>
         ) : null}
 

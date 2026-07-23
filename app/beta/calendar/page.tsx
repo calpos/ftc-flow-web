@@ -75,6 +75,7 @@ export default function CalendarPage() {
   );
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [dayPanelOpen, setDayPanelOpen] = useState(false);
+  const [createDay, setCreateDay] = useState<string | null>(null);
 
   // editor state
   const [eventDialog, setEventDialog] = useState<{ open: boolean; editing: TeamEvent | null }>({
@@ -208,7 +209,30 @@ export default function CalendarPage() {
     setDayPanelOpen(false);
   }
 
+  // Improvement 4: keyboard month navigation
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (view !== "month" || selectedDay !== null) return;
+      const el = document.activeElement;
+      if (!el) return;
+      const tag = (el as Element).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (el.closest('[role="dialog"]')) return;
+      if (e.key === "ArrowLeft") {
+        if (month === 0) { setMonth(11); setYear((y) => y - 1); }
+        else setMonth((m) => m - 1);
+      } else if (e.key === "ArrowRight") {
+        if (month === 11) { setMonth(0); setYear((y) => y + 1); }
+        else setMonth((m) => m + 1);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [view, selectedDay, month]);
+
   const dayItems = selectedDay ? itemsByDate[selectedDay] ?? [] : [];
+
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
 
   return (
     <div className="space-y-6">
@@ -268,7 +292,19 @@ export default function CalendarPage() {
             <h2 className="text-lg font-medium">
               {MONTH_NAMES[month]} {year}
             </h2>
-            <div className="flex gap-2">
+            {/* Improvement 3: Today button + prev/next */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                className="h-9 px-3 text-sm"
+                disabled={isCurrentMonth}
+                onClick={() => {
+                  setYear(today.getFullYear());
+                  setMonth(today.getMonth());
+                }}
+              >
+                Today
+              </Button>
               <IconButton className="h-9 w-9" onClick={prevMonth} aria-label="Previous month">
                 <ChevronLeft className="h-4 w-4" />
               </IconButton>
@@ -294,45 +330,98 @@ export default function CalendarPage() {
                 today.getDate() === day;
               const isPastDay = !isToday && new Date(key + 'T00:00:00') < new Date(today.getFullYear(), today.getMonth(), today.getDate());
               return (
-                <button
+                // Improvement 1 & 2: overlay pattern lets chip <button>s coexist without nesting
+                <div
                   key={key}
-                  type="button"
-                  onClick={() => { if (items.length) { setSelectedDay(key); setDayPanelOpen(true); } }}
-                  className={`flex min-h-[68px] flex-col gap-1 rounded-lg border p-1.5 text-left transition-colors ${
-                    items.length ? "hover:border-signal-dim" : "cursor-default"
-                  } ${isToday ? "border-signal/60 bg-signal-dim/20" : "border-edge"} ${isPastDay ? "opacity-40" : ""}`}
+                  className={`group relative flex min-h-[68px] flex-col rounded-lg border transition-colors lg:min-h-[96px] ${
+                    isToday ? "border-signal/60 bg-signal-dim/20" : "border-edge"
+                  } ${items.length > 0 ? "hover:border-signal-dim" : "hover:border-signal-dim/40"} ${isPastDay ? "opacity-40" : ""}`}
                 >
-                  <span
-                    className={`text-xs ${isToday ? "font-semibold text-signal" : "text-fg-mid"}`}
-                  >
-                    {day}
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {items.slice(0, 4).map((it) => {
-                      const isLive = it.kind === 'event' && (() => { const ev = events.find(x => x.id === it.id); return ev ? getEventStatus(ev, now).state === 'live' : false; })();
-                      if (isLive) {
-                        return (
-                          <span key={it.kind + '-' + it.id} className="relative inline-flex">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: it.color }} />
-                            <span className="relative h-1.5 w-1.5 rounded-full" style={{ backgroundColor: it.color }} />
-                          </span>
-                        );
-                      }
-                      return (
-                        <span
-                          key={it.kind + '-' + it.id}
-                          className="h-1.5 w-1.5 rounded-full"
-                          style={{ backgroundColor: it.color }}
-                        />
-                      );
-                    })}
-                    {items.length > 4 ? (
-                      <span className="text-[9px] leading-none text-fg-dim">
-                        +{items.length - 4}
+                  {/* Full-cell click target sits behind the content layer */}
+                  <button
+                    type="button"
+                    aria-label={`${isToday ? "Today, " : ""}${MONTH_NAMES[month]} ${day}`}
+                    onClick={() => {
+                      if (items.length > 0) { setSelectedDay(key); setDayPanelOpen(true); }
+                      else setCreateDay(key);
+                    }}
+                    className="absolute inset-0 z-0 rounded-lg"
+                  />
+                  {/* Content layer sits above the overlay; chips re-enable pointer events */}
+                  <div className="pointer-events-none relative z-10 flex flex-1 flex-col gap-1 p-1.5">
+                    <div className="flex items-start justify-between">
+                      <span
+                        className={`text-xs ${isToday ? "font-semibold text-signal" : "text-fg-mid"}`}
+                      >
+                        {day}
                       </span>
-                    ) : null}
+                      {/* Improvement 2: plus affordance on empty days */}
+                      {items.length === 0 && (
+                        <Plus className="h-3 w-3 text-fg-dim opacity-0 transition-opacity group-hover:opacity-100" />
+                      )}
+                    </div>
+
+                    {/* Small screens: dots (live events get a ping) */}
+                    <div className="flex flex-wrap gap-1 lg:hidden">
+                      {items.slice(0, 4).map((it) => {
+                        const isLive = it.kind === 'event' && (() => { const ev = events.find(x => x.id === it.id); return ev ? getEventStatus(ev, now).state === 'live' : false; })();
+                        if (isLive) {
+                          return (
+                            <span key={it.kind + '-' + it.id} className="relative inline-flex">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: it.color }} />
+                              <span className="relative h-1.5 w-1.5 rounded-full" style={{ backgroundColor: it.color }} />
+                            </span>
+                          );
+                        }
+                        return (
+                          <span
+                            key={it.kind + '-' + it.id}
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: it.color }}
+                          />
+                        );
+                      })}
+                      {items.length > 4 ? (
+                        <span className="text-[9px] leading-none text-fg-dim">
+                          +{items.length - 4}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* Large screens: item chips */}
+                    <div className="pointer-events-auto hidden flex-col gap-0.5 lg:flex">
+                      {items.slice(0, 3).map((it, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openItem(it);
+                          }}
+                          className="flex items-center gap-1 rounded-sm border-l-2 bg-raised px-1 py-0.5 text-left text-xs transition-opacity hover:opacity-80"
+                          style={{ borderLeftColor: it.color }}
+                        >
+                          <span className="min-w-0 flex-1 truncate text-fg-mid">{it.title}</span>
+                          {it.time && (
+                            <span className="shrink-0 text-[10px] text-fg-dim">{it.time}</span>
+                          )}
+                        </button>
+                      ))}
+                      {items.length > 3 && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDay(key);
+                          }}
+                          className="text-left text-[10px] text-fg-dim transition-colors hover:text-fg-mid"
+                        >
+                          +{items.length - 3} more
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -397,11 +486,15 @@ export default function CalendarPage() {
         </SlideOver>
       ) : null}
 
+      {/* EventDialog handles both normal open and empty-day click-to-create */}
       <EventDialog
-        open={eventDialog.open}
+        open={eventDialog.open || createDay !== null}
         editing={eventDialog.editing}
-        defaultDate={selectedDay ?? undefined}
-        onClose={() => setEventDialog({ open: false, editing: null })}
+        defaultDate={createDay ?? selectedDay ?? undefined}
+        onClose={() => {
+          setEventDialog({ open: false, editing: null });
+          setCreateDay(null);
+        }}
       />
       <ProjectDialog
         open={projectDialog.open}
