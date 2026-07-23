@@ -4,6 +4,7 @@ import React, { ReactNode, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
+import { CommandPalette } from "./CommandPalette";
 
 const FOCUSABLE_SELECTORS =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -83,11 +84,26 @@ export function BetaShell({ children }: { children: ReactNode }) {
 
   const dur = reducedMotion ? "0s" : "0.25s";
 
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => document.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, []);
+
   return (
     <div className="flex min-h-screen">
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-edge bg-surface lg:block">
-        <Sidebar />
+        <Sidebar onOpenPalette={() => setPaletteOpen(true)} />
       </aside>
 
       {/* Mobile drawer — always mounted; transitions driven by menuOpen state */}
@@ -117,7 +133,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
           }}
           onKeyDown={handlePanelKeyDown}
         >
-          <Sidebar onNavigate={() => setMenuOpen(false)} />
+          <Sidebar onNavigate={() => setMenuOpen(false)} onOpenPalette={() => setPaletteOpen(true)} />
         </div>
       </div>
 
