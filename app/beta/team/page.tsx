@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useApp } from "@/lib/beta/store/hooks";
 import { MOCK_TEAM_NAME, MOCK_TEAM_NUMBER } from "@/lib/beta/mocks";
 import { SegmentedTabs, TabOption } from "../_components/ui";
@@ -12,15 +13,18 @@ import { TeamPolls } from "../_components/TeamPolls";
 type Tab = "members" | "projects" | "tasks" | "polls";
 const VALID: Tab[] = ["members", "projects", "tasks", "polls"];
 
-export default function TeamPage() {
+function TeamPageContent() {
   const { members, tasks, taskItems, polls } = useApp();
-  // Beta pages only render after client-side hydration (StoreProvider gates on
-  // it), so reading window here is safe and avoids a setState-in-effect.
-  const [tab, setTab] = useState<Tab>(() => {
-    if (typeof window === "undefined") return "members";
-    const param = new URLSearchParams(window.location.search).get("tab");
-    return param && VALID.includes(param as Tab) ? (param as Tab) : "members";
-  });
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const param = searchParams.get("tab");
+  const tab: Tab = param && VALID.includes(param as Tab) ? (param as Tab) : "members";
+
+  function handleTabChange(next: Tab) {
+    router.push(pathname + "?tab=" + next, { scroll: false });
+  }
 
   const options: TabOption<Tab>[] = [
     { label: "Members", value: "members", count: members.length },
@@ -38,7 +42,7 @@ export default function TeamPage() {
           </h1>
           <p className="mt-1 text-fg-mid">Members, projects, tasks, and polls in one place.</p>
         </header>
-        <SegmentedTabs options={options} value={tab} onChange={setTab} className="lg:shrink-0" />
+        <SegmentedTabs options={options} value={tab} onChange={handleTabChange} className="lg:shrink-0" />
       </div>
 
       {tab === "members" ? <TeamMembers /> : null}
@@ -46,5 +50,13 @@ export default function TeamPage() {
       {tab === "tasks" ? <TeamTasks /> : null}
       {tab === "polls" ? <TeamPolls /> : null}
     </div>
+  );
+}
+
+export default function TeamPage() {
+  return (
+    <Suspense fallback={null}>
+      <TeamPageContent />
+    </Suspense>
   );
 }
