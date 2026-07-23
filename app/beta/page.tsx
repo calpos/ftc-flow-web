@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -9,7 +9,6 @@ import {
   CheckSquare,
   ChevronRight,
   Folder,
-  ListChecks,
 } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import { MOCK_TEAM_NAME, MOCK_TEAM_NUMBER } from "@/lib/beta/mocks";
@@ -30,7 +29,8 @@ import {
   getTaskItemProgress,
   getUserPollVotes,
 } from "@/lib/beta/types";
-import { Card, DeadlineInline, Pill, ProgressBar, StageBadge } from "./_components/ui";
+import { Card, DeadlineInline, EmptyState, Pill, ProgressBar, StageBadge } from "./_components/ui";
+import { WelcomePrimer } from "./_components/WelcomePrimer";
 
 function daysUntil(dateStr: string): number {
   const today = new Date();
@@ -251,6 +251,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
+      <WelcomePrimer />
       <header>
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           {greetingPhrase()}, {greetingName}
@@ -283,7 +284,9 @@ export default function HomePage() {
         <ListPanel
           title="My Tasks"
           viewAllHref="/beta/team?tab=tasks"
-          empty="You're clear on assigned tasks."
+          emptyIcon={<CheckSquare className="h-4 w-4" />}
+          emptyTitle="No assigned tasks"
+          emptySubtitle="You have no tasks assigned to you right now."
         >
           {myTasks.map((t) => {
             const progress = formatProgress(getTaskItemProgress(t));
@@ -306,7 +309,9 @@ export default function HomePage() {
         <ListPanel
           title="My Projects"
           viewAllHref="/beta/team?tab=projects"
-          empty="No assigned projects need attention."
+          emptyIcon={<Folder className="h-4 w-4" />}
+          emptyTitle="No assigned projects"
+          emptySubtitle="You haven't been assigned to any projects yet."
         >
           {myProjects.map((t) => {
             const progress = formatProgress(getProjectProgress(t, taskItems));
@@ -326,7 +331,9 @@ export default function HomePage() {
         <ListPanel
           title="Upcoming"
           viewAllHref="/beta/calendar"
-          empty="Nothing upcoming."
+          emptyIcon={<CalendarIcon className="h-4 w-4" />}
+          emptyTitle="Nothing upcoming"
+          emptySubtitle="No events, due dates, or polls scheduled from today onward."
         >
           {upcoming.map((u) => (
             <Link
@@ -427,12 +434,16 @@ function PendingChip({
 function ListPanel({
   title,
   viewAllHref,
-  empty,
+  emptyIcon,
+  emptyTitle,
+  emptySubtitle,
   children,
 }: {
   title: string;
   viewAllHref: string;
-  empty: string;
+  emptyIcon?: ReactNode;
+  emptyTitle: string;
+  emptySubtitle?: string;
   children: React.ReactNode;
 }) {
   const items = Array.isArray(children) ? children : [children];
@@ -452,10 +463,7 @@ function ListPanel({
       {hasItems ? (
         <div className="space-y-2">{children}</div>
       ) : (
-        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-edge px-3.5 py-4 text-sm text-fg-dim">
-          <ListChecks className="h-4 w-4" />
-          {empty}
-        </div>
+        <EmptyState compact icon={emptyIcon} title={emptyTitle} subtitle={emptySubtitle} />
       )}
     </Card>
   );

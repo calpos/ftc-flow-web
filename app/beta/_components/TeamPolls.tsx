@@ -166,6 +166,17 @@ export function TeamPolls() {
               ? "Create a poll to gather decisions from your team."
               : "Try adjusting your search or filters."
           }
+          action={
+            polls.length === 0
+              ? { label: "Create poll", onClick: () => setDialog({ open: true, editing: null }) }
+              : {
+                  label: "Clear filters",
+                  onClick: () => {
+                    setSearch("");
+                    setFilters(createDefaultPollFilters());
+                  },
+                }
+          }
         />
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">

@@ -191,6 +191,20 @@ function CalendarContent() {
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [allItems]);
 
+  const upcomingAll = useMemo(() => {
+    const items: CalItem[] = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const startTs = start.getTime();
+    events.forEach((e) => {
+      items.push({ kind: "event", id: e.id, title: e.title, color: getEventTypeColor(e.type), label: getEventTypeLabel(e.type), date: e.date, time: formatEventTimeRange(e) });
+    });
+    tasks.forEach((p) => { if (!p.dueDate) return; items.push({ kind: "project", id: p.id, title: p.name, color: p.color, label: "Project due", date: p.dueDate }); });
+    taskItems.forEach((t) => { if (!t.dueDate) return; items.push({ kind: "task", id: t.id, title: t.title, color: t.color, label: "Task due", date: t.dueDate, time: t.dueTime ? formatTime12h(t.dueTime) : undefined }); });
+    polls.forEach((p) => { if (!p.closesAt) return; items.push({ kind: "poll", id: p.id, title: p.question, color: "#AF52DE", label: "Poll closes", date: dateStrFromTs(p.closesAt), time: formatTime12h(`${pad2(new Date(p.closesAt).getHours())}:${pad2(new Date(p.closesAt).getMinutes())}`) }); });
+    return items.filter((it) => new Date(`${it.date}T00:00:00`).getTime() >= startTs);
+  }, [events, tasks, taskItems, polls]);
+
   const days = useMemo(() => getCalendarDays(year, month), [year, month]);
 
   function toggleKind(k: CalKind) {
@@ -441,7 +455,26 @@ function CalendarContent() {
       ) : (
         <div className="space-y-2">
           {upcoming.length === 0 ? (
-            <EmptyState title="Nothing upcoming" subtitle="Add an event or due date to see it here." />
+            enabled.size === 0 || upcomingAll.length > upcoming.length ? (
+              <EmptyState
+                title="All categories hidden"
+                subtitle="Some upcoming items are hidden. Toggle a category above to see them."
+                action={{
+                  label: "Show all",
+                  onClick: () =>
+                    setEnabled(new Set<CalKind>(["event", "project", "task", "poll"])),
+                }}
+              />
+            ) : (
+              <EmptyState
+                title="Nothing upcoming"
+                subtitle="No events, due dates, or poll closings scheduled from today onward."
+                action={{
+                  label: "Add event",
+                  onClick: () => setEventDialog({ open: true, editing: null }),
+                }}
+              />
+            )
           ) : (
             upcoming.map((it) => (
               <button
@@ -475,25 +508,39 @@ function CalendarContent() {
           title={formatDateDisplay(selectedDay)}
         >
           <div className="space-y-2">
-            {dayItems.map((it) => (
-              <button
-                key={`${it.kind}-${it.id}`}
-                type="button"
-                onClick={() => openItem(it)}
-                className="flex w-full items-center justify-between gap-3 rounded-xl border border-edge bg-raised px-3.5 py-3 text-left transition-colors hover:border-signal-dim"
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="h-8 w-1 rounded-full" style={{ backgroundColor: it.color }} />
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-fg">{it.title}</p>
-                    <Pill label={it.label} color={it.color} className="mt-1" />
+            {dayItems.length === 0 ? (
+              <EmptyState
+                title="No items visible"
+                subtitle="All categories for this day are hidden. Toggle a category above to see them."
+                action={{
+                  label: "Show all",
+                  onClick: () => {
+                    setEnabled(new Set<CalKind>(["event", "project", "task", "poll"]));
+                    setSelectedDay(null);
+                  },
+                }}
+              />
+            ) : (
+              dayItems.map((it) => (
+                <button
+                  key={`${it.kind}-${it.id}`}
+                  type="button"
+                  onClick={() => openItem(it)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-edge bg-raised px-3.5 py-3 text-left transition-colors hover:border-signal-dim"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="h-8 w-1 rounded-full" style={{ backgroundColor: it.color }} />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-fg">{it.title}</p>
+                      <Pill label={it.label} color={it.color} className="mt-1" />
+                    </div>
                   </div>
-                </div>
-                {it.time ? (
-                  <span className="shrink-0 text-xs text-fg-dim">{it.time}</span>
-                ) : null}
-              </button>
-            ))}
+                  {it.time ? (
+                    <span className="shrink-0 text-xs text-fg-dim">{it.time}</span>
+                  ) : null}
+                </button>
+              ))
+            )}
           </div>
         </SlideOver>
       ) : null}

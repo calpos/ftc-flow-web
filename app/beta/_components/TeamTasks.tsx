@@ -64,6 +64,17 @@ function TeamTasksContent() {
               ? "Add a task — standalone or under a project."
               : "Try adjusting your search or filters."
           }
+          action={
+            taskItems.length === 0
+              ? { label: "Add task", onClick: () => setDialog({ open: true, editing: null }) }
+              : {
+                  label: "Clear filters",
+                  onClick: () => {
+                    setSearch("");
+                    setFilters(createDefaultTaskFilters());
+                  },
+                }
+          }
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
