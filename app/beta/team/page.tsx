@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useApp } from "@/lib/beta/store/hooks";
 import { MOCK_TEAM_NAME, MOCK_TEAM_NUMBER } from "@/lib/beta/mocks";
 import { SegmentedTabs, TabOption } from "../_components/ui";
@@ -12,18 +13,26 @@ import { TeamPolls } from "../_components/TeamPolls";
 type Tab = "members" | "projects" | "tasks" | "polls";
 const VALID: Tab[] = ["members", "projects", "tasks", "polls"];
 
-export default function TeamPage() {
+function TeamPageContent() {
   const { members, tasks, taskItems, polls } = useApp();
-  // Beta pages only render after client-side hydration (StoreProvider gates on
-  // it), so reading window here is safe and avoids a setState-in-effect.
-  const [tab, setTab] = useState<Tab>(() => {
-    if (typeof window === "undefined") return "members";
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("project")) return "projects";
-    if (params.get("task")) return "tasks";
-    const p = params.get("tab");
-    return p && VALID.includes(p as Tab) ? (p as Tab) : "members";
-  });
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Detail params (?project= / ?task=) force their tab so URL-addressable
+  // detail views open on the right surface; otherwise ?tab= wins.
+  const param = searchParams.get("tab");
+  const tab: Tab = searchParams.get("project")
+    ? "projects"
+    : searchParams.get("task")
+      ? "tasks"
+      : param && VALID.includes(param as Tab)
+        ? (param as Tab)
+        : "members";
+
+  function handleTabChange(next: Tab) {
+    router.push(pathname + "?tab=" + next, { scroll: false });
+  }
 
   const options: TabOption<Tab>[] = [
     { label: "Members", value: "members", count: members.length },
@@ -41,19 +50,20 @@ export default function TeamPage() {
         <p className="mt-1 text-fg-mid">Members, projects, tasks, and polls in one place.</p>
       </header>
 
-      <SegmentedTabs options={options} value={tab} onChange={setTab} />
+      <SegmentedTabs options={options} value={tab} onChange={handleTabChange} />
 
       {tab === "members" ? <TeamMembers /> : null}
-      {tab === "projects" ? (
-        <TeamProjects
-          onStaleCleared={() => {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get("task")) setTab("tasks");
-          }}
-        />
-      ) : null}
+      {tab === "projects" ? <TeamProjects /> : null}
       {tab === "tasks" ? <TeamTasks /> : null}
       {tab === "polls" ? <TeamPolls /> : null}
     </div>
+  );
+}
+
+export default function TeamPage() {
+  return (
+    <Suspense fallback={null}>
+      <TeamPageContent />
+    </Suspense>
   );
 }

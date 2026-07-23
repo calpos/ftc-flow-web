@@ -3,18 +3,19 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { CheckSquare } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
-import { Task } from "@/lib/beta/types";
+import { Task, getTaskItemProgress } from "@/lib/beta/types";
 import { TaskFilters, createDefaultTaskFilters } from "@/lib/beta/filters";
 import { getFilteredAndSortedTaskItems } from "./taskItemFilters";
-import { EmptyState } from "./ui";
+import { Button, EmptyState } from "./ui";
 import { WorkFilterBar } from "./WorkFilterBar";
 import { TaskCard } from "./cards";
 import { TaskDetail } from "./details";
 import { TaskDialog } from "./TaskDialog";
+import { Dialog } from "./Dialog";
 import { useDetailParam } from "./useDetailParam";
 
 function TeamTasksContent() {
-  const { tasks, taskItems, members, currentUserId } = useApp();
+  const { tasks, taskItems, members, currentUserId, updateTaskItem, deleteTaskItem } = useApp();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<TaskFilters>(() => createDefaultTaskFilters());
 
@@ -22,6 +23,7 @@ function TeamTasksContent() {
     open: false,
     editing: null,
   });
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const param = useDetailParam("task");
   const detail = taskItems.find((t) => t.id === param.value) ?? null;
@@ -72,6 +74,18 @@ function TeamTasksContent() {
               parent={t.parentProjectId ? tasks.find((p) => p.id === t.parentProjectId) : undefined}
               members={members}
               onOpen={() => param.open(t.id)}
+              onComplete={() => {
+                const isComplete = getTaskItemProgress(t) >= 100;
+                if (t.subtasks.length > 0) {
+                  updateTaskItem({
+                    ...t,
+                    subtasks: t.subtasks.map((s) => ({ ...s, completed: !isComplete })),
+                  });
+                } else {
+                  updateTaskItem({ ...t, progress: isComplete ? 0 : 100 });
+                }
+              }}
+              onDelete={() => setPendingDeleteId(t.id)}
             />
           ))}
         </div>
@@ -93,6 +107,35 @@ function TeamTasksContent() {
             param.close();
           }}
         />
+      ) : null}
+
+      {pendingDeleteId !== null ? (
+        <Dialog
+          open
+          onClose={() => setPendingDeleteId(null)}
+          title="Delete task?"
+          maxWidth="max-w-sm"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setPendingDeleteId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  deleteTaskItem(pendingDeleteId);
+                  setPendingDeleteId(null);
+                }}
+              >
+                Delete
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-fg-mid">
+            This permanently deletes the task and cannot be undone.
+          </p>
+        </Dialog>
       ) : null}
     </div>
   );
