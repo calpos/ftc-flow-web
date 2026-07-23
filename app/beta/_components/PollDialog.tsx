@@ -80,13 +80,14 @@ function DiscardConfirm({
   );
 }
 
-// Mounted only while open, so state initializes once from props.
 export function PollDialog({
   onClose,
   editing,
+  open = true,
 }: {
   onClose: () => void;
   editing?: Poll | null;
+  open?: boolean;
 }) {
   const { currentUser, addPoll, updatePoll, deletePoll } = useApp();
 
@@ -204,114 +205,115 @@ export function PollDialog({
         />
       ) : null}
       <Dialog
-        open
+        open={open}
         onClose={guardedClose}
-      title={editing ? "Edit poll" : "New poll"}
-      footer={
-        <>
-          {editing ? (
-            <Button
-              variant="danger"
-              className="mr-auto"
-              onClick={() => {
-                deletePoll(editing.id);
-                onClose();
-              }}
-            >
-              <Trash2 className="h-4 w-4" /> Delete
+        onSubmit={handleSave}
+        title={editing ? "Edit poll" : "New poll"}
+        footer={
+          <>
+            {editing ? (
+              <Button
+                variant="danger"
+                className="mr-auto"
+                onClick={() => {
+                  deletePoll(editing.id);
+                  onClose();
+                }}
+              >
+                <Trash2 className="h-4 w-4" /> Delete
+              </Button>
+            ) : null}
+            <Button variant="secondary" onClick={guardedClose}>
+              Cancel
             </Button>
-          ) : null}
-          <Button variant="secondary" onClick={guardedClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={!canSave}>
-            {editing ? "Save changes" : "Create poll"}
-          </Button>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <TextField
-          label="Question"
-          value={question}
-          onChange={setQuestion}
-          placeholder="What should we name the robot?"
-        />
-
-        <Field label="Options" hint="At least two options.">
-          <div className="space-y-2">
-            {options.map((o, i) => (
-              <div key={o.id} className="flex items-center gap-2">
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: POLL_OPTION_COLORS[i % POLL_OPTION_COLORS.length] }}
-                />
-                <input
-                  value={o.text}
-                  onChange={(e) => setOptionText(o.id, e.target.value)}
-                  placeholder={`Option ${i + 1}`}
-                  className={inputBase}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeOption(o.id)}
-                  disabled={options.length <= 2}
-                  aria-label="Remove option"
-                  className="text-fg-dim hover:text-danger disabled:opacity-30"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-            <Button variant="secondary" onClick={addOption}>
-              <Plus className="h-4 w-4" /> Add option
+            <Button onClick={handleSave} disabled={!canSave}>
+              {editing ? "Save changes" : "Create poll"}
             </Button>
-          </div>
-        </Field>
-
-        <Toggle
-          label="Allow multiple answers"
-          description="Voters can pick more than one option."
-          checked={allowMultiple}
-          onChange={setAllowMultiple}
-        />
-
-        <ColorPicker label="Accent color" value={color} onChange={setColor} options={POLL_OPTION_COLORS} />
-
-        <Field label="Closes">
-          <div className="flex flex-wrap gap-2">
-            {CLOSING_PRESET_OPTIONS.map((p) => {
-              const active = p.key === preset;
-              return (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={() => setPreset(p.key)}
-                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    active
-                      ? "border-signal bg-signal-dim text-signal"
-                      : "border-edge text-fg-mid hover:text-fg"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-        </Field>
-        {preset === "custom" ? (
-          <DateField label="Close date" value={customDate} onChange={setCustomDate} />
-        ) : null}
-
-        {editing ? (
-          <Toggle
-            label="Reset votes"
-            description="Clear all existing votes when saving."
-            checked={resetVotes}
-            onChange={setResetVotes}
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <TextField
+            label="Question"
+            value={question}
+            onChange={setQuestion}
+            placeholder="What should we name the robot?"
           />
-        ) : null}
-      </div>
+
+          <Field label="Options" hint="At least two options.">
+            <div className="space-y-2">
+              {options.map((o, i) => (
+                <div key={o.id} className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: POLL_OPTION_COLORS[i % POLL_OPTION_COLORS.length] }}
+                  />
+                  <input
+                    value={o.text}
+                    onChange={(e) => setOptionText(o.id, e.target.value)}
+                    placeholder={`Option ${i + 1}`}
+                    className={inputBase}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeOption(o.id)}
+                    disabled={options.length <= 2}
+                    aria-label="Remove option"
+                    className="text-fg-dim hover:text-danger disabled:opacity-30"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <Button variant="secondary" onClick={addOption}>
+                <Plus className="h-4 w-4" /> Add option
+              </Button>
+            </div>
+          </Field>
+
+          <Toggle
+            label="Allow multiple answers"
+            description="Voters can pick more than one option."
+            checked={allowMultiple}
+            onChange={setAllowMultiple}
+          />
+
+          <ColorPicker label="Accent color" value={color} onChange={setColor} options={POLL_OPTION_COLORS} />
+
+          <Field label="Closes">
+            <div className="flex flex-wrap gap-2">
+              {CLOSING_PRESET_OPTIONS.map((p) => {
+                const active = p.key === preset;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setPreset(p.key)}
+                    className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      active
+                        ? "border-signal bg-signal-dim text-signal"
+                        : "border-edge text-fg-mid hover:text-fg"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+          {preset === "custom" ? (
+            <DateField label="Close date" value={customDate} onChange={setCustomDate} />
+          ) : null}
+
+          {editing ? (
+            <Toggle
+              label="Reset votes"
+              description="Clear all existing votes when saving."
+              checked={resetVotes}
+              onChange={setResetVotes}
+            />
+          ) : null}
+        </div>
       </Dialog>
     </>
   );

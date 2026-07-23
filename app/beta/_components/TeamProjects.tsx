@@ -83,12 +83,11 @@ function TeamProjectsContent({ onStaleCleared }: { onStaleCleared?: () => void }
         </div>
       )}
 
-      {projectDialog.open ? (
-        <ProjectDialog
-          editing={projectDialog.editing}
-          onClose={() => setProjectDialog({ open: false, editing: null })}
-        />
-      ) : null}
+      <ProjectDialog
+        open={projectDialog.open}
+        editing={projectDialog.editing}
+        onClose={() => setProjectDialog({ open: false, editing: null })}
+      />
 
       {detail ? (
         <ProjectDetail
@@ -106,13 +105,12 @@ function TeamProjectsContent({ onStaleCleared }: { onStaleCleared?: () => void }
         />
       ) : null}
 
-      {taskDialog.open ? (
-        <TaskDialog
-          editing={taskDialog.editing}
-          defaultParentId={taskDialog.parentId}
-          onClose={() => setTaskDialog({ open: false, editing: null })}
-        />
-      ) : null}
+      <TaskDialog
+        open={taskDialog.open}
+        editing={taskDialog.editing}
+        defaultParentId={taskDialog.parentId}
+        onClose={() => setTaskDialog({ open: false, editing: null })}
+      />
     </div>
   );
 }

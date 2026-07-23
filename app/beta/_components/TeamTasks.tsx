@@ -91,12 +91,11 @@ function TeamTasksContent() {
         </div>
       )}
 
-      {dialog.open ? (
-        <TaskDialog
-          editing={dialog.editing}
-          onClose={() => setDialog({ open: false, editing: null })}
-        />
-      ) : null}
+      <TaskDialog
+        open={dialog.open}
+        editing={dialog.editing}
+        onClose={() => setDialog({ open: false, editing: null })}
+      />
 
       {detail ? (
         <TaskDetail

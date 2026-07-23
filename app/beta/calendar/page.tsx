@@ -16,6 +16,7 @@ import {
   getEventTypeLabel,
 } from "@/lib/beta/types";
 import { DAY_HEADERS, MONTH_NAMES, getCalendarDays } from "@/lib/beta/filters";
+import { getEventStatus } from "../_components/util";
 import { Button, Card, EmptyState, IconButton, Pill, SegmentedTabs } from "../_components/ui";
 import { SlideOver } from "../_components/Dialog";
 import { EventDialog } from "../_components/EventDialog";
@@ -43,6 +44,15 @@ const KIND_LABELS: { key: CalKind; label: string }[] = [
   { key: "poll", label: "Polls" },
 ];
 
+function useNow(intervalMs = 60000): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
 function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -59,6 +69,7 @@ const ITEM_PARAM_KEYS = ["event", "project", "task", "poll"] as const;
 function CalendarContent() {
   const { events, tasks, taskItems, polls } = useApp();
   const today = new Date();
+  const now = useNow();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -329,13 +340,14 @@ function CalendarContent() {
                 today.getFullYear() === year &&
                 today.getMonth() === month &&
                 today.getDate() === day;
+              const isPastDay = !isToday && new Date(key + 'T00:00:00') < new Date(today.getFullYear(), today.getMonth(), today.getDate());
               return (
                 // Improvement 1 & 2: overlay pattern lets chip <button>s coexist without nesting
                 <div
                   key={key}
                   className={`group relative flex min-h-[68px] flex-col rounded-lg border transition-colors lg:min-h-[96px] ${
                     isToday ? "border-signal/60 bg-signal-dim/20" : "border-edge"
-                  } ${items.length > 0 ? "hover:border-signal-dim" : "hover:border-signal-dim/40"}`}
+                  } ${items.length > 0 ? "hover:border-signal-dim" : "hover:border-signal-dim/40"} ${isPastDay ? "opacity-40" : ""}`}
                 >
                   {/* Full-cell click target sits behind the content layer */}
                   <button
@@ -361,15 +373,26 @@ function CalendarContent() {
                       )}
                     </div>
 
-                    {/* Small screens: dots (unchanged) */}
+                    {/* Small screens: dots (live events get a ping) */}
                     <div className="flex flex-wrap gap-1 lg:hidden">
-                      {items.slice(0, 4).map((it, i) => (
-                        <span
-                          key={i}
-                          className="h-1.5 w-1.5 rounded-full"
-                          style={{ backgroundColor: it.color }}
-                        />
-                      ))}
+                      {items.slice(0, 4).map((it) => {
+                        const isLive = it.kind === 'event' && (() => { const ev = events.find(x => x.id === it.id); return ev ? getEventStatus(ev, now).state === 'live' : false; })();
+                        if (isLive) {
+                          return (
+                            <span key={it.kind + '-' + it.id} className="relative inline-flex">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: it.color }} />
+                              <span className="relative h-1.5 w-1.5 rounded-full" style={{ backgroundColor: it.color }} />
+                            </span>
+                          );
+                        }
+                        return (
+                          <span
+                            key={it.kind + '-' + it.id}
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: it.color }}
+                          />
+                        );
+                      })}
                       {items.length > 4 ? (
                         <span className="text-[9px] leading-none text-fg-dim">
                           +{items.length - 4}
