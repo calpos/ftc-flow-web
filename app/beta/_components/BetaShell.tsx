@@ -125,7 +125,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation"
-          {...(!menuOpen ? { inert: '' } : {})}
+          inert={menuOpen ? undefined : true}
           className="absolute inset-y-0 left-0 w-72 border-r border-edge bg-surface"
           style={{
             transform: menuOpen ? "translateX(0)" : "translateX(-100%)",
