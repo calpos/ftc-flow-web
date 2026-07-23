@@ -1,7 +1,7 @@
 "use client";
 
-import { ReactNode } from "react";
-import { Check } from "lucide-react";
+import { ReactNode, useState } from "react";
+import { Check, Search } from "lucide-react";
 import { TeamMember } from "@/lib/beta/types";
 import { Avatar } from "./ui";
 
@@ -261,7 +261,7 @@ export function RangeField({
   );
 }
 
-/** Multi-select list of team members with avatars and checkmarks. */
+/** Multi-select list of team members with avatars, search, and bulk actions. */
 export function MemberMultiSelect({
   label,
   members,
@@ -273,41 +273,105 @@ export function MemberMultiSelect({
   selected: string[];
   onToggle: (id: string) => void;
 }) {
+  const [query, setQuery] = useState("");
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? members.filter((m) => {
+        const name = `${m.firstName} ${m.lastName}`.toLowerCase();
+        const role = m.isCoach
+          ? "coach"
+          : `${m.teamRole}${m.grade ? ` · ${m.grade}` : ""}`.toLowerCase();
+        return name.includes(q) || role.includes(q);
+      })
+    : members;
+
   return (
     <Field label={label}>
-      <div className="flex flex-col gap-1.5">
-        {members.map((m) => {
-          const isOn = selected.includes(m.id);
-          return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => onToggle(m.id)}
-              className={`flex items-center gap-3 rounded-[10px] border px-3 py-2 text-left transition-colors ${
-                isOn
-                  ? "border-signal bg-signal-dim/40"
-                  : "border-edge bg-raised hover:border-signal-dim"
-              }`}
-            >
-              <Avatar member={m} size={28} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm text-fg">
-                  {m.firstName} {m.lastName}
-                </span>
-                <span className="block truncate text-xs text-fg-dim">
-                  {m.isCoach ? "Coach" : `${m.teamRole}${m.grade ? ` · ${m.grade}` : ""}`}
-                </span>
-              </span>
-              <span
-                className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border ${
-                  isOn ? "border-signal bg-signal text-ink" : "border-edge"
+      <div className="relative mb-2">
+        <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+          <Search className="h-3.5 w-3.5 text-fg-dim" />
+        </div>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search members…"
+          aria-label="Search members"
+          className={`${inputBase} h-9 pl-8`}
+        />
+      </div>
+
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs text-fg-dim">
+          {selected.length} of {members.length} selected
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              filtered.forEach((m) => {
+                if (!selected.includes(m.id)) onToggle(m.id);
+              });
+            }}
+            className="text-xs font-medium text-signal"
+          >
+            {q ? `Select all (${filtered.length})` : "Select all"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              [...selected].forEach((id) => onToggle(id));
+            }}
+            className="text-xs font-medium text-signal"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div className="flex max-h-48 flex-col gap-1.5 overflow-y-auto">
+        {filtered.length === 0 ? (
+          <div className="py-4 text-center text-xs text-fg-dim">
+            No members match your search
+          </div>
+        ) : (
+          filtered.map((m) => {
+            const isOn = selected.includes(m.id);
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => onToggle(m.id)}
+                aria-pressed={isOn}
+                className={`flex items-center gap-3 rounded-[10px] border px-3 py-2 text-left transition-colors ${
+                  isOn
+                    ? "border-signal bg-signal-dim/40"
+                    : "border-edge bg-raised hover:border-signal-dim"
                 }`}
               >
-                {isOn ? <Check className="h-3.5 w-3.5" /> : null}
-              </span>
-            </button>
-          );
-        })}
+                <Avatar member={m} size={28} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-fg">
+                    {m.firstName} {m.lastName}
+                  </span>
+                  <span className="block truncate text-xs text-fg-dim">
+                    {m.isCoach
+                      ? "Coach"
+                      : `${m.teamRole}${m.grade ? ` · ${m.grade}` : ""}`}
+                  </span>
+                </span>
+                <span
+                  className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border ${
+                    isOn ? "border-signal bg-signal text-ink" : "border-edge"
+                  }`}
+                >
+                  {isOn ? <Check className="h-3.5 w-3.5" /> : null}
+                </span>
+              </button>
+            );
+          })
+        )}
       </div>
     </Field>
   );
