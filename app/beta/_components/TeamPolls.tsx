@@ -183,12 +183,11 @@ export function TeamPolls() {
         </div>
       )}
 
-      {dialog.open ? (
-        <PollDialog
-          editing={dialog.editing}
-          onClose={() => setDialog({ open: false, editing: null })}
-        />
-      ) : null}
+      <PollDialog
+        open={dialog.open}
+        editing={dialog.editing}
+        onClose={() => setDialog({ open: false, editing: null })}
+      />
     </div>
   );
 }

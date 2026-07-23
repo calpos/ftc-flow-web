@@ -19,8 +19,16 @@ function TeamPageContent() {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Detail params (?project= / ?task=) force their tab so URL-addressable
+  // detail views open on the right surface; otherwise ?tab= wins.
   const param = searchParams.get("tab");
-  const tab: Tab = param && VALID.includes(param as Tab) ? (param as Tab) : "members";
+  const tab: Tab = searchParams.get("project")
+    ? "projects"
+    : searchParams.get("task")
+      ? "tasks"
+      : param && VALID.includes(param as Tab)
+        ? (param as Tab)
+        : "members";
 
   function handleTabChange(next: Tab) {
     router.push(pathname + "?tab=" + next, { scroll: false });

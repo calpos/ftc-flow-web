@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import {
@@ -15,12 +16,14 @@ import {
   getEventTypeLabel,
 } from "@/lib/beta/types";
 import { DAY_HEADERS, MONTH_NAMES, getCalendarDays } from "@/lib/beta/filters";
+import { getEventStatus } from "../_components/util";
 import { Button, Card, EmptyState, IconButton, Pill, SegmentedTabs } from "../_components/ui";
 import { SlideOver } from "../_components/Dialog";
 import { EventDialog } from "../_components/EventDialog";
 import { ProjectDialog } from "../_components/ProjectDialog";
 import { TaskDialog } from "../_components/TaskDialog";
 import { PollDialog } from "../_components/PollDialog";
+import { useDetailParam } from "../_components/useDetailParam";
 
 type CalKind = "event" | "project" | "task" | "poll";
 
@@ -41,6 +44,15 @@ const KIND_LABELS: { key: CalKind; label: string }[] = [
   { key: "poll", label: "Polls" },
 ];
 
+function useNow(intervalMs = 60000): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
 function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -52,9 +64,16 @@ function dateStrFromTs(ts: number) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
-export default function CalendarPage() {
+const ITEM_PARAM_KEYS = ["event", "project", "task", "poll"] as const;
+
+function CalendarContent() {
   const { events, tasks, taskItems, polls } = useApp();
   const today = new Date();
+  const now = useNow();
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [view, setView] = useState<"month" | "upcoming">("month");
   const [year, setYear] = useState(today.getFullYear());
@@ -62,17 +81,38 @@ export default function CalendarPage() {
   const [enabled, setEnabled] = useState<Set<CalKind>>(
     new Set<CalKind>(["event", "project", "task", "poll"]),
   );
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [newEventOpen, setNewEventOpen] = useState(false);
   const [createDay, setCreateDay] = useState<string | null>(null);
 
-  // editor state
-  const [eventDialog, setEventDialog] = useState<{ open: boolean; editing: TeamEvent | null }>({
-    open: false,
-    editing: null,
-  });
-  const [projectDialog, setProjectDialog] = useState<TeamTask | null>(null);
-  const [taskDialog, setTaskDialog] = useState<Task | null>(null);
-  const [pollDialog, setPollDialog] = useState<Poll | null>(null);
+  const eventParam = useDetailParam("event");
+  const projectParam = useDetailParam("project");
+  const taskParam = useDetailParam("task");
+  const pollParam = useDetailParam("poll");
+  const dayParam = useDetailParam("day");
+
+  const editingEvent = events.find((e) => e.id === eventParam.value) ?? null;
+  const editingProject = tasks.find((p) => p.id === projectParam.value) ?? null;
+  const editingTask = taskItems.find((t) => t.id === taskParam.value) ?? null;
+  const editingPoll = polls.find((p) => p.id === pollParam.value) ?? null;
+  const selectedDay = dayParam.value;
+
+  const { value: eventValue, close: eventClose } = eventParam;
+  const { value: projectValue, close: projectClose } = projectParam;
+  const { value: taskValue, close: taskClose } = taskParam;
+  const { value: pollValue, close: pollClose } = pollParam;
+
+  useEffect(() => {
+    if (eventValue && !editingEvent) eventClose();
+  }, [eventValue, editingEvent, eventClose]);
+  useEffect(() => {
+    if (projectValue && !editingProject) projectClose();
+  }, [projectValue, editingProject, projectClose]);
+  useEffect(() => {
+    if (taskValue && !editingTask) taskClose();
+  }, [taskValue, editingTask, taskClose]);
+  useEffect(() => {
+    if (pollValue && !editingPoll) pollClose();
+  }, [pollValue, editingPoll, pollClose]);
 
   const allItems = useMemo<CalItem[]>(() => {
     const items: CalItem[] = [];
@@ -175,17 +215,10 @@ export default function CalendarPage() {
   }
 
   function openItem(it: CalItem) {
-    if (it.kind === "event") {
-      const e = events.find((x) => x.id === it.id) ?? null;
-      setEventDialog({ open: true, editing: e });
-    } else if (it.kind === "project") {
-      setProjectDialog(tasks.find((x) => x.id === it.id) ?? null);
-    } else if (it.kind === "task") {
-      setTaskDialog(taskItems.find((x) => x.id === it.id) ?? null);
-    } else {
-      setPollDialog(polls.find((x) => x.id === it.id) ?? null);
-    }
-    setSelectedDay(null);
+    const params = new URLSearchParams(searchParams.toString());
+    ITEM_PARAM_KEYS.forEach((k) => params.delete(k));
+    params.set(it.kind, it.id);
+    router.push(`${pathname}?${params.toString()}`);
   }
 
   // Improvement 4: keyboard month navigation
@@ -220,7 +253,7 @@ export default function CalendarPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
           <p className="mt-1 text-fg-mid">Events, due dates, and poll closings.</p>
         </div>
-        <Button onClick={() => setEventDialog({ open: true, editing: null })}>
+        <Button onClick={() => setNewEventOpen(true)}>
           <Plus className="h-4 w-4" /> New event
         </Button>
       </header>
@@ -307,20 +340,21 @@ export default function CalendarPage() {
                 today.getFullYear() === year &&
                 today.getMonth() === month &&
                 today.getDate() === day;
+              const isPastDay = !isToday && new Date(key + 'T00:00:00') < new Date(today.getFullYear(), today.getMonth(), today.getDate());
               return (
                 // Improvement 1 & 2: overlay pattern lets chip <button>s coexist without nesting
                 <div
                   key={key}
                   className={`group relative flex min-h-[68px] flex-col rounded-lg border transition-colors lg:min-h-[96px] ${
                     isToday ? "border-signal/60 bg-signal-dim/20" : "border-edge"
-                  } ${items.length > 0 ? "hover:border-signal-dim" : "hover:border-signal-dim/40"}`}
+                  } ${items.length > 0 ? "hover:border-signal-dim" : "hover:border-signal-dim/40"} ${isPastDay ? "opacity-40" : ""}`}
                 >
                   {/* Full-cell click target sits behind the content layer */}
                   <button
                     type="button"
                     aria-label={`${isToday ? "Today, " : ""}${MONTH_NAMES[month]} ${day}`}
                     onClick={() => {
-                      if (items.length > 0) setSelectedDay(key);
+                      if (items.length > 0) dayParam.open(key);
                       else setCreateDay(key);
                     }}
                     className="absolute inset-0 z-0 rounded-lg"
@@ -339,15 +373,26 @@ export default function CalendarPage() {
                       )}
                     </div>
 
-                    {/* Small screens: dots (unchanged) */}
+                    {/* Small screens: dots (live events get a ping) */}
                     <div className="flex flex-wrap gap-1 lg:hidden">
-                      {items.slice(0, 4).map((it, i) => (
-                        <span
-                          key={i}
-                          className="h-1.5 w-1.5 rounded-full"
-                          style={{ backgroundColor: it.color }}
-                        />
-                      ))}
+                      {items.slice(0, 4).map((it) => {
+                        const isLive = it.kind === 'event' && (() => { const ev = events.find(x => x.id === it.id); return ev ? getEventStatus(ev, now).state === 'live' : false; })();
+                        if (isLive) {
+                          return (
+                            <span key={it.kind + '-' + it.id} className="relative inline-flex">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: it.color }} />
+                              <span className="relative h-1.5 w-1.5 rounded-full" style={{ backgroundColor: it.color }} />
+                            </span>
+                          );
+                        }
+                        return (
+                          <span
+                            key={it.kind + '-' + it.id}
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: it.color }}
+                          />
+                        );
+                      })}
                       {items.length > 4 ? (
                         <span className="text-[9px] leading-none text-fg-dim">
                           +{items.length - 4}
@@ -379,7 +424,7 @@ export default function CalendarPage() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedDay(key);
+                            dayParam.open(key);
                           }}
                           className="text-left text-[10px] text-fg-dim transition-colors hover:text-fg-mid"
                         >
@@ -426,7 +471,7 @@ export default function CalendarPage() {
       {selectedDay ? (
         <SlideOver
           open
-          onClose={() => setSelectedDay(null)}
+          onClose={() => dayParam.close()}
           title={formatDateDisplay(selectedDay)}
         >
           <div className="space-y-2">
@@ -453,26 +498,32 @@ export default function CalendarPage() {
         </SlideOver>
       ) : null}
 
-      {/* Improvement 2: EventDialog handles both normal open and click-to-create */}
-      {(eventDialog.open || createDay !== null) ? (
+      {/* EventDialog handles normal open, URL param, and empty-day click-to-create */}
+      {newEventOpen || eventParam.value || createDay !== null ? (
         <EventDialog
-          editing={eventDialog.editing}
+          editing={editingEvent}
           defaultDate={createDay ?? selectedDay ?? undefined}
           onClose={() => {
-            setEventDialog({ open: false, editing: null });
-            setCreateDay(null);
+            if (newEventOpen) setNewEventOpen(false);
+            else if (createDay !== null) setCreateDay(null);
+            else eventParam.close();
           }}
         />
-      ) : null}
-      {projectDialog ? (
-        <ProjectDialog editing={projectDialog} onClose={() => setProjectDialog(null)} />
-      ) : null}
-      {taskDialog ? (
-        <TaskDialog editing={taskDialog} onClose={() => setTaskDialog(null)} />
-      ) : null}
-      {pollDialog ? (
-        <PollDialog editing={pollDialog} onClose={() => setPollDialog(null)} />
+      ) : projectParam.value ? (
+        <ProjectDialog editing={editingProject} onClose={() => projectParam.close()} />
+      ) : taskParam.value ? (
+        <TaskDialog editing={editingTask} onClose={() => taskParam.close()} />
+      ) : pollParam.value ? (
+        <PollDialog editing={editingPoll} onClose={() => pollParam.close()} />
       ) : null}
     </div>
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <Suspense fallback={null}>
+      <CalendarContent />
+    </Suspense>
   );
 }
