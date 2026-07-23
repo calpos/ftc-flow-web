@@ -1,18 +1,33 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
+import { CommandPalette } from "./CommandPalette";
 
 export function BetaShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => document.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, []);
 
   return (
     <div className="flex min-h-screen">
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-edge bg-surface lg:block">
-        <Sidebar />
+        <Sidebar onOpenPalette={() => setPaletteOpen(true)} />
       </aside>
 
       {/* Mobile drawer */}
@@ -25,7 +40,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
             onClick={() => setMenuOpen(false)}
           />
           <div className="absolute inset-y-0 left-0 w-72 border-r border-edge bg-surface">
-            <Sidebar onNavigate={() => setMenuOpen(false)} />
+            <Sidebar onNavigate={() => setMenuOpen(false)} onOpenPalette={() => setPaletteOpen(true)} />
           </div>
         </div>
       ) : null}
