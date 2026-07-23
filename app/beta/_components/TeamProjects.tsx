@@ -84,7 +84,7 @@ function TeamProjectsContent({ onStaleCleared }: { onStaleCleared?: () => void }
           }
         />
       ) : (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((p) => (
             <ProjectCard
               key={p.id}

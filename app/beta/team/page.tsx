@@ -43,14 +43,15 @@ function TeamPageContent() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Team {MOCK_TEAM_NUMBER} <span className="text-signal">{MOCK_TEAM_NAME}</span>
-        </h1>
-        <p className="mt-1 text-fg-mid">Members, projects, tasks, and polls in one place.</p>
-      </header>
-
-      <SegmentedTabs options={options} value={tab} onChange={handleTabChange} />
+      <div className="space-y-6 lg:flex lg:items-center lg:justify-between lg:space-y-0 lg:gap-6">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Team {MOCK_TEAM_NUMBER} <span className="text-signal">{MOCK_TEAM_NAME}</span>
+          </h1>
+          <p className="mt-1 text-fg-mid">Members, projects, tasks, and polls in one place.</p>
+        </header>
+        <SegmentedTabs options={options} value={tab} onChange={handleTabChange} className="lg:shrink-0" />
+      </div>
 
       {tab === "members" ? <TeamMembers /> : null}
       {tab === "projects" ? <TeamProjects /> : null}

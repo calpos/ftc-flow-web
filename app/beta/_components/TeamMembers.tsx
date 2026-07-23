@@ -34,7 +34,7 @@ export function TeamMembers() {
 
   return (
     <>
-      <Card className="divide-y divide-edge">
+      <Card className="divide-y divide-edge lg:hidden">
         {ordered.map((m) => (
           <MemberRow
             key={m.id}
@@ -46,6 +46,20 @@ export function TeamMembers() {
           />
         ))}
       </Card>
+      <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4">
+        {ordered.map((m) => (
+          <Card key={m.id}>
+            <MemberRow
+              member={m}
+              isSelf={m.id === currentUserId}
+              viewerIsCoach={isCoach}
+              onUpdate={updateMember}
+              avatarSize={48}
+              onRowClick={(clicked) => setSelectedMember(clicked)}
+            />
+          </Card>
+        ))}
+      </div>
       <MemberProfilePanel
         member={selectedMember}
         isSelf={selectedMember?.id === currentUserId}
@@ -64,12 +78,14 @@ function MemberRow({
   isSelf,
   viewerIsCoach,
   onUpdate,
+  avatarSize = 40,
   onRowClick,
 }: {
   member: TeamMember;
   isSelf: boolean;
   viewerIsCoach: boolean;
   onUpdate: (m: TeamMember) => void;
+  avatarSize?: number;
   onRowClick: (m: TeamMember) => void;
 }) {
   const [adding, setAdding] = useState(false);
@@ -93,7 +109,7 @@ function MemberRow({
       className="flex items-start gap-3 p-4 cursor-pointer hover:bg-raised/50 transition-colors rounded-none"
       onClick={() => onRowClick(member)}
     >
-      <Avatar member={member} size={40} />
+      <Avatar member={member} size={avatarSize} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="font-medium text-fg">
