@@ -3,7 +3,10 @@ import { StoreProvider } from "@/lib/beta/StoreProvider";
 import { BetaShell } from "./_components/BetaShell";
 
 export const metadata: Metadata = {
-  title: "Local Alpha",
+  title: {
+    default: 'Local Alpha — FTC Flow',
+    template: '%s · FTC Flow Local Alpha',
+  },
   description:
     "Try every FTC Flow feature in your browser. Runs locally, no account needed.",
   robots: { index: false, follow: false },
