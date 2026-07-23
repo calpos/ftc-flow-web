@@ -59,6 +59,20 @@ export function TeamProjects() {
               ? "Create your first team project to get started."
               : "Try adjusting your search or filters."
           }
+          action={
+            tasks.length === 0
+              ? {
+                  label: "Create project",
+                  onClick: () => setProjectDialog({ open: true, editing: null }),
+                }
+              : {
+                  label: "Clear filters",
+                  onClick: () => {
+                    setSearch("");
+                    setFilters(createDefaultTaskFilters());
+                  },
+                }
+          }
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
