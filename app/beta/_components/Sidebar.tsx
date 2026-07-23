@@ -4,8 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Calendar,
+  CircleUser,
   Home,
   RotateCcw,
+  Search,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -17,7 +19,7 @@ const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/beta", label: "Home", icon: Home },
   { href: "/beta/team", label: "Team", icon: Users },
   { href: "/beta/calendar", label: "Calendar", icon: Calendar },
-  { href: "/beta/account", label: "Account", icon: Users },
+  { href: "/beta/account", label: "Account", icon: CircleUser },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -25,7 +27,7 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({ onNavigate, onOpenPalette }: { onNavigate?: () => void; onOpenPalette?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -45,6 +47,17 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 space-y-1 px-3">
+        <button
+          type="button"
+          onClick={() => onOpenPalette?.()}
+          className="flex w-full items-center gap-2.5 rounded-[10px] border border-edge bg-ink/40 px-3 py-2 text-sm text-fg-dim transition-colors hover:bg-raised hover:text-fg mb-2"
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">Search...</span>
+          <kbd className="hidden rounded border border-edge bg-raised px-1.5 py-0.5 text-[10px] font-mono text-fg-dim lg:block">
+            Ctrl K
+          </kbd>
+        </button>
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
