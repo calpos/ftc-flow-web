@@ -1,23 +1,38 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { useSidebarCollapsed } from "./useSidebarCollapsed";
+import { CommandPalette } from "./CommandPalette";
 
 export function BetaShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useSidebarCollapsed();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => document.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, []);
 
   return (
     <div className="flex min-h-screen">
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
       {/* Desktop sidebar */}
       <aside
         style={{ width: collapsed ? "4.5rem" : "16rem" }}
         className="sticky top-0 hidden h-screen shrink-0 border-r border-edge bg-surface lg:block transition-[width] duration-200 ease-in-out motion-reduce:transition-none"
       >
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} onOpenPalette={() => setPaletteOpen(true)} />
       </aside>
 
       {/* Mobile drawer */}
@@ -30,7 +45,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
             onClick={() => setMenuOpen(false)}
           />
           <div className="absolute inset-y-0 left-0 w-72 border-r border-edge bg-surface">
-            <Sidebar onNavigate={() => setMenuOpen(false)} />
+            <Sidebar onNavigate={() => setMenuOpen(false)} onOpenPalette={() => setPaletteOpen(true)} />
           </div>
         </div>
       ) : null}
