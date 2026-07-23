@@ -9,10 +9,12 @@ import {
   TeamMember,
 } from "@/lib/beta/types";
 import { Avatar, Card, EmptyState } from "./ui";
+import { MemberProfilePanel } from "./MemberProfilePanel";
 
 export function TeamMembers() {
-  const { members, currentUser, currentUserId, updateMember } = useApp();
+  const { members, currentUser, currentUserId, updateMember, tasks, taskItems, polls } = useApp();
   const isCoach = !!currentUser?.isCoach;
+  const [selectedMember, setSelectedMember] = useState(null as TeamMember | null);
 
   const ordered = useMemo(() => {
     const coaches = members.filter((m) => m.isCoach);
@@ -31,17 +33,29 @@ export function TeamMembers() {
   }
 
   return (
-    <Card className="divide-y divide-edge">
-      {ordered.map((m) => (
-        <MemberRow
-          key={m.id}
-          member={m}
-          isSelf={m.id === currentUserId}
-          viewerIsCoach={isCoach}
-          onUpdate={updateMember}
-        />
-      ))}
-    </Card>
+    <>
+      <Card className="divide-y divide-edge">
+        {ordered.map((m) => (
+          <MemberRow
+            key={m.id}
+            member={m}
+            isSelf={m.id === currentUserId}
+            viewerIsCoach={isCoach}
+            onUpdate={updateMember}
+            onRowClick={(clicked) => setSelectedMember(clicked)}
+          />
+        ))}
+      </Card>
+      <MemberProfilePanel
+        member={selectedMember}
+        isSelf={selectedMember?.id === currentUserId}
+        tasks={tasks}
+        taskItems={taskItems}
+        polls={polls}
+        currentUserId={currentUserId}
+        onClose={() => setSelectedMember(null)}
+      />
+    </>
   );
 }
 
@@ -50,11 +64,13 @@ function MemberRow({
   isSelf,
   viewerIsCoach,
   onUpdate,
+  onRowClick,
 }: {
   member: TeamMember;
   isSelf: boolean;
   viewerIsCoach: boolean;
   onUpdate: (m: TeamMember) => void;
+  onRowClick: (m: TeamMember) => void;
 }) {
   const [adding, setAdding] = useState(false);
   const canEditWorkRoles = isSelf && !member.isCoach;
@@ -73,7 +89,10 @@ function MemberRow({
   }
 
   return (
-    <div className="flex items-start gap-3 p-4">
+    <div
+      className="flex items-start gap-3 p-4 cursor-pointer hover:bg-raised/50 transition-colors rounded-none"
+      onClick={() => onRowClick(member)}
+    >
       <Avatar member={member} size={40} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -96,6 +115,7 @@ function MemberRow({
                 <select
                   value={member.teamRole}
                   onChange={(e) => setTeamRole(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
                   className="rounded-md border border-edge bg-raised px-1.5 py-0.5 text-xs text-fg [color-scheme:dark] focus:border-signal focus:outline-none"
                 >
                   {[...new Set([member.teamRole, ...COMMON_TEAM_ROLES])].map((r) => (
@@ -120,7 +140,7 @@ function MemberRow({
                   {canEditWorkRoles ? (
                     <button
                       type="button"
-                      onClick={() => removeWorkRole(r)}
+                      onClick={(e) => { e.stopPropagation(); removeWorkRole(r); }}
                       aria-label={`Remove ${r}`}
                       className="text-fg-dim hover:text-danger"
                     >
@@ -136,6 +156,7 @@ function MemberRow({
                     defaultValue=""
                     onChange={(e) => addWorkRole(e.target.value)}
                     onBlur={() => setAdding(false)}
+                    onClick={(e) => e.stopPropagation()}
                     className="rounded-md border border-edge bg-raised px-1.5 py-0.5 text-xs text-fg [color-scheme:dark] focus:border-signal focus:outline-none"
                   >
                     <option value="" disabled>
@@ -150,7 +171,7 @@ function MemberRow({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setAdding(true)}
+                    onClick={(e) => { e.stopPropagation(); setAdding(true); }}
                     className="inline-flex items-center gap-1 rounded-md border border-dashed border-edge px-2 py-0.5 text-xs text-fg-dim hover:border-signal-dim hover:text-fg"
                   >
                     <Plus className="h-3 w-3" /> Role

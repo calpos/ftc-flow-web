@@ -3,6 +3,7 @@
 import { ButtonHTMLAttributes, ReactNode } from "react";
 import { Search, X } from "lucide-react";
 import {
+  DeadlineUrgency,
   TeamMember,
   getProgressLabel,
   getProgressLabelColor,
@@ -315,6 +316,75 @@ export function EmptyState({
       ) : null}
     </div>
   );
+}
+
+/* --------------------------------------------------- Deadline urgency UI */
+
+export function DeadlineDateDisplay({
+  dateLabel,
+  relativeLabel,
+  urgency,
+}: {
+  dateLabel: string;
+  relativeLabel: string;
+  urgency: DeadlineUrgency | null;
+}) {
+  const isDanger = urgency === "overdue" || urgency === "today";
+  const isWarning = urgency === "due-soon";
+
+  if (isDanger) {
+    return (
+      <div className="shrink-0 rounded-md bg-danger/10 px-1.5 py-1 text-right">
+        <p className="text-xs font-medium text-danger">{dateLabel}</p>
+        <p className="text-[11px] text-danger">{relativeLabel}</p>
+      </div>
+    );
+  }
+
+  if (isWarning) {
+    return (
+      <div className="shrink-0 rounded-md bg-warning/10 px-1.5 py-1 text-right">
+        <p className="text-xs font-medium text-warning">{dateLabel}</p>
+        <p className="text-[11px] text-warning">{relativeLabel}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="shrink-0 text-right">
+      <p className="text-xs font-medium text-fg-mid">{dateLabel}</p>
+      <p className="text-[11px] text-fg-dim">{relativeLabel}</p>
+    </div>
+  );
+}
+
+export function DeadlineInline({
+  text,
+  urgency,
+}: {
+  text: string;
+  urgency: DeadlineUrgency | null;
+}) {
+  const isDanger = urgency === "overdue" || urgency === "today";
+  const isWarning = urgency === "due-soon";
+
+  if (isDanger) {
+    return (
+      <span className="rounded bg-danger/10 px-1.5 py-0.5 text-xs font-medium text-danger">
+        {text}
+      </span>
+    );
+  }
+
+  if (isWarning) {
+    return (
+      <span className="rounded bg-warning/10 px-1.5 py-0.5 text-xs font-medium text-warning">
+        {text}
+      </span>
+    );
+  }
+
+  return <span className="text-xs text-fg-dim">{text}</span>;
 }
 
 /* ------------------------------------------------------------- Card shell */

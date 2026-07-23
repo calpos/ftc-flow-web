@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import { POLL_OPTION_COLORS, Poll, PollOption } from "@/lib/beta/types";
@@ -27,6 +27,57 @@ function toDateInput(ts?: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate(),
   ).padStart(2, "0")}`;
+}
+
+function DiscardConfirm({
+  onKeep,
+  onDiscard,
+}: {
+  onKeep: () => void;
+  onDiscard: () => void;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onKeep();
+      }
+    };
+    document.addEventListener("keydown", handler, true);
+    return () => document.removeEventListener("keydown", handler, true);
+  }, [onKeep]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="discard-title"
+      aria-describedby="discard-desc"
+    >
+      <div
+        className="absolute inset-0 bg-ink/50"
+        onClick={onKeep}
+        aria-hidden
+      />
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-edge bg-surface p-6 shadow-2xl">
+        <p id="discard-title" className="text-base font-semibold text-fg">
+          Discard changes?
+        </p>
+        <p id="discard-desc" className="mt-2 text-sm text-fg-mid">
+          You&apos;ll lose everything you&apos;ve entered on this poll.
+        </p>
+        <div className="mt-5 flex justify-end gap-3">
+          <Button variant="secondary" autoFocus onClick={onKeep}>
+            Keep editing
+          </Button>
+          <Button variant="danger" onClick={onDiscard}>
+            Discard
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Mounted only while open, so state initializes once from props.
@@ -59,6 +110,41 @@ export function PollDialog({
     editing?.closesAt ? toDateInput(editing.closesAt) : "",
   );
   const [resetVotes, setResetVotes] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const [snapshot] = useState(() => ({
+    question: editing?.question ?? "",
+    optionsText: (editing?.options ?? [{ id: "opt-a", text: "" }, { id: "opt-b", text: "" }])
+      .map((o) => o.text)
+      .join("\0"),
+    allowMultiple: editing?.allowMultiple ?? false,
+    color: editing?.color ?? POLL_OPTION_COLORS[0],
+    preset: (editing ? (editing.closesAt ? "custom" : "indefinite") : "1w") as ClosingPreset,
+    customDate: editing?.closesAt ? toDateInput(editing.closesAt) : "",
+    resetVotes: false,
+  }));
+
+  const isDirty = useMemo(() => {
+    const effectiveCustomDate = preset === 'custom' ? customDate : '';
+    const effectiveInitCustomDate = snapshot.preset === 'custom' ? snapshot.customDate : '';
+    return (
+      question !== snapshot.question ||
+      options.map((o) => o.text).join("\0") !== snapshot.optionsText ||
+      allowMultiple !== snapshot.allowMultiple ||
+      color !== snapshot.color ||
+      preset !== snapshot.preset ||
+      effectiveCustomDate !== effectiveInitCustomDate ||
+      resetVotes !== snapshot.resetVotes
+    );
+  }, [question, options, allowMultiple, color, preset, customDate, resetVotes, snapshot]);
+
+  function guardedClose() {
+    if (!isDirty) {
+      onClose();
+    } else {
+      setShowConfirm(true);
+    }
+  }
 
   const filledOptions = options.filter((o) => o.text.trim().length > 0);
   const canSave =
@@ -110,9 +196,16 @@ export function PollDialog({
   }
 
   return (
-    <Dialog
-      open
-      onClose={onClose}
+    <>
+      {showConfirm ? (
+        <DiscardConfirm
+          onKeep={() => setShowConfirm(false)}
+          onDiscard={onClose}
+        />
+      ) : null}
+      <Dialog
+        open
+        onClose={guardedClose}
       title={editing ? "Edit poll" : "New poll"}
       footer={
         <>
@@ -128,7 +221,7 @@ export function PollDialog({
               <Trash2 className="h-4 w-4" /> Delete
             </Button>
           ) : null}
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={guardedClose}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={!canSave}>
@@ -219,6 +312,7 @@ export function PollDialog({
           />
         ) : null}
       </div>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }

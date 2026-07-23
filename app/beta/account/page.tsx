@@ -1,12 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { Check, Info, RotateCcw } from "lucide-react";
 import { useApp } from "@/lib/beta/store/hooks";
 import { resetBetaData } from "@/lib/beta/storage";
 import { Avatar, Button, Card } from "../_components/ui";
+import { ResetConfirmDialog } from "@/app/beta/_components/ResetConfirmDialog";
 
 export default function AccountPage() {
-  const { members, currentUser, currentUserId, setUser } = useApp();
+  const { members, currentUser, currentUserId, setUser, taskItems, tasks, polls, events } =
+    useApp();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -87,16 +92,30 @@ export default function AccountPage() {
           is stored only on this device — no account, no server. Real accounts and cloud sync
           arrive with the production launch at beta.ftcflow.app.
         </p>
-        <Button
-          variant="secondary"
-          onClick={async () => {
-            await resetBetaData();
-            window.location.reload();
-          }}
-        >
-          <RotateCcw className="h-4 w-4" /> Reset demo data
-        </Button>
+        <div className="border-t border-edge" />
+        <div className="pt-1">
+          <p className="mb-2 text-xs font-medium text-danger/70">Danger zone</p>
+          <Button variant="danger" onClick={() => setConfirmOpen(true)}>
+            <RotateCcw className="h-4 w-4" /> Reset demo data
+          </Button>
+        </div>
       </Card>
+      <ResetConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          setIsResetting(true);
+          await resetBetaData();
+          window.location.reload();
+        }}
+        counts={{
+          taskItems: taskItems.length,
+          projects: tasks.length,
+          events: events.length,
+          polls: polls.length,
+        }}
+        isResetting={isResetting}
+      />
     </div>
   );
 }

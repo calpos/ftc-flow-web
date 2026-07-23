@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowDownUp, Plus, SlidersHorizontal } from "lucide-react";
 import { PROGRESS_STAGES, ProgressStage } from "@/lib/beta/types";
 import {
@@ -36,6 +36,24 @@ export function WorkFilterBar({
 }) {
   const [open, setOpen] = useState(false);
   const active = hasActiveTaskFilters(filters);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const filterBtnSpanRef = useRef<HTMLSpanElement>(null);
+
+  function returnFocusToFilter() {
+    filterBtnSpanRef.current?.querySelector("button")?.focus();
+  }
+
+  function closePanel() {
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const first = panelRef.current?.querySelector<HTMLElement>(
+      "button:not([disabled]), select, input",
+    );
+    first?.focus();
+  }, [open]);
 
   function toggleInvolvement(key: InvolvementKey) {
     const next = new Set(filters.involvement);
@@ -60,19 +78,46 @@ export function WorkFilterBar({
           aria-hidden
           tabIndex={-1}
           className="fixed inset-0 z-10 cursor-default"
-          onClick={() => setOpen(false)}
+          onClick={closePanel}
         />
       ) : null}
-      <IconButton active={active} onClick={() => setOpen((o) => !o)} aria-label="Filters">
-        <SlidersHorizontal className="h-[18px] w-[18px]" />
-      </IconButton>
+
+      <span ref={filterBtnSpanRef}>
+        <IconButton
+          active={active}
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Filters"
+          aria-haspopup="true"
+          aria-expanded={open}
+          aria-controls="work-filter-panel"
+        >
+          <SlidersHorizontal className="h-[18px] w-[18px]" />
+        </IconButton>
+      </span>
 
       <Button onClick={onCreate} className="shrink-0">
         <Plus className="h-4 w-4" /> New
       </Button>
 
       {open ? (
-        <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-2xl border border-edge bg-surface p-4 shadow-2xl">
+        <div
+          ref={panelRef}
+          id="work-filter-panel"
+          className="absolute right-0 top-full z-20 mt-2 w-80 rounded-2xl border border-edge bg-surface p-4 shadow-2xl"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              closePanel();
+              returnFocusToFilter();
+            }
+          }}
+          onBlur={(e) => {
+            if (!panelRef.current?.contains(e.relatedTarget as Node | null)) {
+              closePanel();
+              returnFocusToFilter();
+            }
+          }}
+        >
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-medium">Filters & sorting</p>
             <button
