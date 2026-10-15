@@ -8,11 +8,13 @@ import {
   ChevronRight,
   CircleUser,
   Home,
+  LogOut,
   RotateCcw,
   Search,
   Users,
   type LucideIcon,
 } from "lucide-react";
+import type { BetaAuth } from "@/lib/auth/types";
 import { MOCK_TEAM_NAME, MOCK_TEAM_NUMBER } from "@/lib/beta/mocks";
 import { resetBetaData } from "@/lib/beta/storage";
 import { PerspectiveSwitcher } from "./PerspectiveSwitcher";
@@ -34,11 +36,13 @@ export function Sidebar({
   collapsed = false,
   onToggle,
   onOpenPalette,
+  auth,
 }: {
   onNavigate?: () => void;
   collapsed?: boolean;
   onToggle?: () => void;
   onOpenPalette?: () => void;
+  auth: BetaAuth;
 }) {
   const pathname = usePathname();
 
@@ -156,6 +160,40 @@ export function Sidebar({
 
       {/* Section D - Footer */}
       <div className="space-y-2 border-t border-edge p-3">
+        {auth.kind === "user" ? (
+          collapsed ? (
+            <form action="/auth/signout" method="post" className="relative group w-full">
+              <button
+                type="submit"
+                aria-label="Sign out"
+                className="flex w-full items-center justify-center rounded-[10px] px-3 py-2 text-xs font-medium text-fg-dim transition-colors hover:bg-raised hover:text-fg"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+              <div aria-hidden="true" className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-edge bg-surface px-2.5 py-1.5 text-xs font-medium text-fg shadow-xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-100 motion-reduce:transition-none">
+                Sign out
+              </div>
+            </form>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 rounded-[10px] border border-edge bg-ink/40 px-3 py-2">
+                <CircleUser className="h-4 w-4 shrink-0 text-fg-dim" />
+                <span className="min-w-0 flex-1 truncate text-xs text-fg-mid" title={auth.email || undefined}>
+                  {auth.email || "Signed in"}
+                </span>
+              </div>
+              <form action="/auth/signout" method="post">
+                <button
+                  type="submit"
+                  className="flex w-full items-center justify-center gap-2 rounded-[10px] px-3 py-2 text-xs font-medium text-fg-dim transition-colors hover:bg-raised hover:text-fg"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Sign out
+                </button>
+              </form>
+            </>
+          )
+        ) : null}
         {collapsed ? null : <PerspectiveSwitcher direction="up" />}
         {collapsed ? (
           <div className="relative group w-full">

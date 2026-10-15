@@ -39,6 +39,8 @@ const AUTH_CODES: Readonly<Record<string, string>> = {
   same_password: "Choose a password different from your current one.",
   session_not_found: SESSION_EXPIRED,
   session_expired: SESSION_EXPIRED,
+  email_address_invalid: "Enter a valid email address.",
+  reauthentication_needed: "Sign in again, then change your password.",
 };
 
 const POSTGRES_CODES: Readonly<Record<string, string>> = {
