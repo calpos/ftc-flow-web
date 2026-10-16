@@ -2,24 +2,35 @@
 
 import { useState } from "react";
 import { Check, Info, RotateCcw } from "lucide-react";
+import { useActiveTeam } from "@/lib/beta/ActiveTeamProvider";
 import { useApp } from "@/lib/beta/store/hooks";
 import { resetBetaData } from "@/lib/beta/storage";
 import { Avatar, Button, Card } from "../_components/ui";
 import { ResetConfirmDialog } from "@/app/beta/_components/ResetConfirmDialog";
+import { teamLabel } from "@/lib/teams/types";
 
 export default function AccountPage() {
   const { members, currentUser, currentUserId, setUser, taskItems, tasks, polls, events } =
     useApp();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const activeTeam = useActiveTeam();
 
   return (
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Account</h1>
         <p className="mt-1 text-fg-mid">
-          There&apos;s no sign-in yet. Switch perspective to see how FTC Flow looks for any
-          member of the team.
+          {activeTeam.mode === "remote" ? (
+            <>
+              Signed in as {activeTeam.email} · {teamLabel(activeTeam.team)} ({activeTeam.role})
+            </>
+          ) : (
+            <>
+              There&apos;s no sign-in yet. Switch perspective to see how FTC Flow looks for any
+              member of the team.
+            </>
+          )}
         </p>
       </header>
 
@@ -48,42 +59,44 @@ export default function AccountPage() {
         </Card>
       ) : null}
 
-      <section>
-        <h2 className="mb-3 text-sm font-medium">Viewing as</h2>
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-          {members.map((m) => {
-            const active = m.id === currentUserId;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setUser(m.id)}
-                aria-pressed={active}
-                className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors ${
-                  active
-                    ? "border-signal bg-signal-dim/40"
-                    : "border-edge bg-surface hover:border-signal-dim"
-                }`}
-              >
-                <Avatar member={m} size={38} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-fg">
-                    {m.firstName} {m.lastName}
-                  </p>
-                  <p className="truncate text-xs text-fg-dim">
-                    {m.isCoach ? "Coach" : m.teamRole}
-                  </p>
-                </div>
-                {active ? <Check className="h-4 w-4 shrink-0 text-signal" /> : null}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-3 flex items-center gap-2 text-xs text-fg-dim">
-          <Info className="h-3.5 w-3.5" />
-          Edit team and work roles from the Team → Members tab.
-        </p>
-      </section>
+      {activeTeam.mode === "local" ? (
+        <section>
+          <h2 className="mb-3 text-sm font-medium">Viewing as</h2>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {members.map((m) => {
+              const active = m.id === currentUserId;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setUser(m.id)}
+                  aria-pressed={active}
+                  className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors ${
+                    active
+                      ? "border-signal bg-signal-dim/40"
+                      : "border-edge bg-surface hover:border-signal-dim"
+                  }`}
+                >
+                  <Avatar member={m} size={38} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-fg">
+                      {m.firstName} {m.lastName}
+                    </p>
+                    <p className="truncate text-xs text-fg-dim">
+                      {m.isCoach ? "Coach" : m.teamRole}
+                    </p>
+                  </div>
+                  {active ? <Check className="h-4 w-4 shrink-0 text-signal" /> : null}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 flex items-center gap-2 text-xs text-fg-dim">
+            <Info className="h-3.5 w-3.5" />
+            Edit team and work roles from the Team → Members tab.
+          </p>
+        </section>
+      ) : null}
 
       <Card className="space-y-3 p-5">
         <h2 className="text-sm font-medium">About this beta</h2>
@@ -92,30 +105,36 @@ export default function AccountPage() {
           is stored only on this device — no account, no server. Real accounts and cloud sync
           arrive with the production launch at beta.ftcflow.app.
         </p>
-        <div className="border-t border-edge" />
-        <div className="pt-1">
-          <p className="mb-2 text-xs font-medium text-danger/70">Danger zone</p>
-          <Button variant="danger" onClick={() => setConfirmOpen(true)}>
-            <RotateCcw className="h-4 w-4" /> Reset demo data
-          </Button>
-        </div>
+        {activeTeam.mode === "local" ? (
+          <>
+            <div className="border-t border-edge" />
+            <div className="pt-1">
+              <p className="mb-2 text-xs font-medium text-danger/70">Danger zone</p>
+              <Button variant="danger" onClick={() => setConfirmOpen(true)}>
+                <RotateCcw className="h-4 w-4" /> Reset demo data
+              </Button>
+            </div>
+          </>
+        ) : null}
       </Card>
-      <ResetConfirmDialog
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={async () => {
-          setIsResetting(true);
-          await resetBetaData();
-          window.location.reload();
-        }}
-        counts={{
-          taskItems: taskItems.length,
-          projects: tasks.length,
-          events: events.length,
-          polls: polls.length,
-        }}
-        isResetting={isResetting}
-      />
+      {activeTeam.mode === "local" ? (
+        <ResetConfirmDialog
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={async () => {
+            setIsResetting(true);
+            await resetBetaData();
+            window.location.reload();
+          }}
+          counts={{
+            taskItems: taskItems.length,
+            projects: tasks.length,
+            events: events.length,
+            polls: polls.length,
+          }}
+          isResetting={isResetting}
+        />
+      ) : null}
     </div>
   );
 }

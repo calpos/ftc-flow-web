@@ -15,9 +15,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { BetaAuth } from "@/lib/auth/types";
+import { useActiveTeam } from "@/lib/beta/ActiveTeamProvider";
 import { MOCK_TEAM_NAME, MOCK_TEAM_NUMBER } from "@/lib/beta/mocks";
 import { resetBetaData } from "@/lib/beta/storage";
 import { PerspectiveSwitcher } from "./PerspectiveSwitcher";
+import { TeamSwitcher } from "./TeamSwitcher";
 
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/beta", label: "Home", icon: Home },
@@ -45,6 +47,7 @@ export function Sidebar({
   auth: BetaAuth;
 }) {
   const pathname = usePathname();
+  const active = useActiveTeam();
 
   return (
     <div className="flex h-full flex-col">
@@ -59,9 +62,18 @@ export function Sidebar({
               Local Alpha
             </span>
           </div>
-          <p className="mt-2 text-sm text-fg-dim">
-            Team {MOCK_TEAM_NUMBER} · <span className="text-fg-mid">{MOCK_TEAM_NAME}</span>
-          </p>
+          {active.mode === "local" ? (
+            <p className="mt-2 text-sm text-fg-dim">
+              Team {MOCK_TEAM_NUMBER} · <span className="text-fg-mid">{MOCK_TEAM_NAME}</span>
+            </p>
+          ) : active.memberships.length > 1 ? (
+            <TeamSwitcher />
+          ) : (
+            <p className="mt-2 text-sm text-fg-dim">
+              {active.team.team_number === null ? null : `Team ${active.team.team_number} · `}
+              <span className="text-fg-mid">{active.team.name}</span>
+            </p>
+          )}
         </div>
       )}
 
@@ -194,8 +206,8 @@ export function Sidebar({
             </>
           )
         ) : null}
-        {collapsed ? null : <PerspectiveSwitcher direction="up" />}
-        {collapsed ? (
+        {collapsed || active.mode !== "local" ? null : <PerspectiveSwitcher direction="up" />}
+        {active.mode !== "local" ? null : collapsed ? (
           <div className="relative group w-full">
             <button
               type="button"

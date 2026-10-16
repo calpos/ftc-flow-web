@@ -5,7 +5,10 @@ import { hasDemoCookie } from "@/lib/auth/demo";
 import { isAuthGateEnabled } from "@/lib/auth/gate";
 import { checkSession } from "@/lib/auth/session";
 import type { BetaAuth } from "@/lib/auth/types";
+import { ActiveTeamProvider } from "@/lib/beta/ActiveTeamProvider";
 import { StoreProvider } from "@/lib/beta/StoreProvider";
+import { getActiveTeamContext } from "@/lib/teams/active-team";
+import { needsOnboarding } from "@/lib/teams/types";
 import { BetaShell } from "./_components/BetaShell";
 
 export const metadata: Metadata = {
@@ -39,9 +42,17 @@ export default async function BetaLayout({
   children: React.ReactNode;
 }>) {
   const auth = await resolveAuth();
+  // Local and demo visitors never get a context, so they never reach the
+  // redirect; null (can't tell) means no redirect either.
+  const context = auth.kind === "user" ? await getActiveTeamContext() : null;
+  // /onboarding is built by a sibling task and uses the same needsOnboarding
+  // predicate to decide it is done, so the two can't redirect into each other.
+  if (isAuthGateEnabled() && context && needsOnboarding(context)) redirect("/onboarding");
   return (
-    <StoreProvider>
-      <BetaShell auth={auth}>{children}</BetaShell>
-    </StoreProvider>
+    <ActiveTeamProvider context={context}>
+      <StoreProvider>
+        <BetaShell auth={auth}>{children}</BetaShell>
+      </StoreProvider>
+    </ActiveTeamProvider>
   );
 }

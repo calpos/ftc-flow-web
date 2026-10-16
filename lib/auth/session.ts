@@ -1,4 +1,5 @@
 import { isAuthApiError, isAuthSessionMissingError, type User } from "@supabase/supabase-js";
+import { cache } from "react";
 import { isAuthGateEnabled } from "@/lib/auth/gate";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,8 +25,7 @@ function isDefinitive(error: unknown): boolean {
   );
 }
 
-/** Verifies the session with Supabase. Never throws. */
-export async function checkSession(): Promise<SessionCheck> {
+async function loadSession(): Promise<SessionCheck> {
   if (!isAuthGateEnabled()) return { status: "none" };
   const controller = new AbortController();
   const supabase = await createClient({ signal: controller.signal });
@@ -58,6 +58,13 @@ export async function checkSession(): Promise<SessionCheck> {
     clearTimeout(timer);
   }
 }
+
+/**
+ * Verifies the session with Supabase. Never throws. Memoized per render, so
+ * the /beta layout and getActiveTeamContext share one getUser call; outside a
+ * render (route handlers, actions) it is a plain call.
+ */
+export const checkSession = cache(loadSession);
 
 /**
  * The signed-in user, verified with Supabase, or null when signed out, in
