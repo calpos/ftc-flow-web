@@ -5,6 +5,7 @@ import {
   MOCK_PROJECTS,
   MOCK_TASK_ITEMS,
 } from "@/lib/beta/mocks";
+import { getRemoteContext } from "@/lib/beta/remote/context";
 import {
   Poll,
   Task,
@@ -23,6 +24,8 @@ import {
  * store changes from AsyncStorage to browser localStorage. All functions stay
  * async so the slices' fire-and-forget `saveWithWarning(label, Promise)` works
  * unchanged. SSR-safe: every access is guarded by a `typeof window` check.
+ * Saves are no-ops while a remote context is set, so team data never touches
+ * the demo's localStorage.
  */
 
 const MEMBERS_KEY = "ftc_flow_members";
@@ -51,6 +54,8 @@ function getItem(key: string): string | null {
 }
 
 function setItem(key: string, value: string): void {
+  // Remote mode: the team's data lives on the server, never in the demo's keys.
+  if (getRemoteContext() !== null) return;
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(key, value);
