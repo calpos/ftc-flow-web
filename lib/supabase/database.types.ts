@@ -1,14 +1,19 @@
 // Hand-written in the shape of `supabase gen types typescript` output, for the
-// schema after migration 20261015000000_teams_onboarding_roles. Row, Functions
-// and Relationships mirror the CLI. Insert and Update deliberately do not:
-// they are narrowed to what the `authenticated` role is granted, so a write
-// the database would reject fails to compile instead.
+// schema after migrations 20261015000000_teams_onboarding_roles and
+// 20261015000100_workspace_tables. Row, Functions and Relationships mirror the
+// CLI. Insert and Update are narrowed to what the `authenticated` role is
+// granted, so a write the database would reject fails to compile instead.
 //   * Update lists only the granted columns. UPDATE is column-level, and a
 //     PATCH naming any other column fails with 42501.
-//   * Insert is `never`. No role the client uses has INSERT on these tables
-//     (profiles come from the signup trigger, teams and memberships from the
-//     RPCs), and `.upsert()` is an INSERT, so it fails with 42501 too.
-// When regenerating with the CLI, re-apply the narrowing.
+//   * Insert is `never` on profiles, teams and team_members: the client has no
+//     INSERT there (profiles come from the signup trigger, teams and
+//     memberships from the RPCs).
+//   * projects, task_items, polls and events grant table-level INSERT, so
+//     their Insert is CLI-shaped.
+//   * poll_votes is SELECT-only (Insert and Update `never`): every ballot
+//     write goes through set_poll_vote.
+// `.upsert()` fails with 42501 on every table: on conflict it SETs ungranted
+// columns. When regenerating with the CLI, re-apply the narrowing.
 
 export type Json =
   | string
@@ -22,6 +27,119 @@ export type Database = {
   // __InternalSupabase omitted: live PostgREST version unknown (OpenAPI root needs a secret key), so the client assumes v12.
   public: {
     Tables: {
+      events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_time: string | null
+          event_date: string
+          event_type: string
+          id: string
+          start_time: string
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_date: string
+          event_type: string
+          id?: string
+          start_time: string
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string | null
+          end_time?: string | null
+          event_date?: string
+          event_type?: string
+          start_time?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          created_at: string
+          option_ids: string[]
+          poll_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          allow_multiple: boolean
+          closes_at: string | null
+          color: string
+          created_at: string
+          created_by: string | null
+          id: string
+          image_uri: string | null
+          is_open: boolean
+          options: Json
+          question: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          allow_multiple?: boolean
+          closes_at?: string | null
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_uri?: string | null
+          is_open?: boolean
+          options?: Json
+          question: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          allow_multiple?: boolean
+          closes_at?: string | null
+          color?: string
+          image_uri?: string | null
+          is_open?: boolean
+          options?: Json
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polls_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -44,6 +162,130 @@ export type Database = {
           last_name?: string | null
         }
         Relationships: []
+      }
+      projects: {
+        Row: {
+          assigned_members: string[]
+          banner_uri: string | null
+          color: string
+          created_at: string
+          created_by: string | null
+          description: string
+          due_date: string | null
+          editors: string[]
+          id: string
+          image_uri: string | null
+          name: string
+          progress: number
+          subtasks: Json
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_members?: string[]
+          banner_uri?: string | null
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          due_date?: string | null
+          editors?: string[]
+          id?: string
+          image_uri?: string | null
+          name: string
+          progress?: number
+          subtasks?: Json
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_members?: string[]
+          banner_uri?: string | null
+          color?: string
+          description?: string
+          due_date?: string | null
+          editors?: string[]
+          image_uri?: string | null
+          name?: string
+          progress?: number
+          subtasks?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_items: {
+        Row: {
+          assigned_members: string[]
+          color: string
+          created_at: string
+          created_by: string | null
+          description: string
+          due_date: string | null
+          due_time: string | null
+          editors: string[]
+          id: string
+          override_flag: boolean
+          parent_project_id: string | null
+          progress: number
+          subtasks: Json
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_members?: string[]
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          due_date?: string | null
+          due_time?: string | null
+          editors?: string[]
+          id?: string
+          override_flag?: boolean
+          parent_project_id?: string | null
+          progress?: number
+          subtasks?: Json
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_members?: string[]
+          color?: string
+          description?: string
+          due_date?: string | null
+          due_time?: string | null
+          editors?: string[]
+          override_flag?: boolean
+          parent_project_id?: string | null
+          progress?: number
+          subtasks?: Json
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_items_parent_project_fkey"
+            columns: ["parent_project_id", "team_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "team_id"]
+          },
+          {
+            foreignKeyName: "task_items_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_members: {
         Row: {
@@ -106,6 +348,10 @@ export type Database = {
       }
       set_member_role: {
         Args: { p_role: string; p_team_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      set_poll_vote: {
+        Args: { p_option_ids: string[]; p_poll_id: string }
         Returns: undefined
       }
       shares_team_with: { Args: { p_user_id: string }; Returns: boolean }
@@ -253,3 +499,19 @@ export type ProfileRow = Tables<"profiles">
 export type TeamRow = Tables<"teams">
 // Gen types emit the CHECK-constrained text column as string; the narrowing lives here so Database's Row types stay as the CLI emits them.
 export type TeamMemberRow = Omit<Tables<"team_members">, "role"> & { role: TeamRole }
+export type ProjectRow = Tables<"projects">
+export type TaskItemRow = Tables<"task_items">
+export type PollRow = Tables<"polls">
+export type PollVoteRow = Tables<"poll_votes">
+export type EventRow = Tables<"events">
+
+export type ProjectInsert = TablesInsert<"projects">
+export type ProjectUpdate = TablesUpdate<"projects">
+export type TaskItemInsert = TablesInsert<"task_items">
+export type TaskItemUpdate = TablesUpdate<"task_items">
+export type PollInsert = TablesInsert<"polls">
+export type PollUpdate = TablesUpdate<"polls">
+export type EventInsert = TablesInsert<"events">
+export type EventUpdate = TablesUpdate<"events">
+export type ProfileUpdate = TablesUpdate<"profiles">
+export type TeamMemberUpdate = TablesUpdate<"team_members">
