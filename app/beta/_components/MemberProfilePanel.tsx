@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import {
   TeamMember,
@@ -16,6 +16,10 @@ import {
   getUserPollVotes,
 } from "@/lib/beta/types";
 import { Avatar, ProgressBar, StageBadge } from "@/app/beta/_components/ui";
+import { AccessRoleBadge } from "./team-admin/AccessRoleBadge";
+import { MemberAdminSection } from "./team-admin/MemberAdminSection";
+import { useConfirmAction } from "./team-admin/useConfirmAction";
+import type { ViewerAccess } from "./team-admin/useViewerAccess";
 
 interface Props {
   member: TeamMember | null;
@@ -24,6 +28,8 @@ interface Props {
   taskItems: Task[];
   polls: Poll[];
   currentUserId: string;
+  /** Absent in local mode. */
+  access?: ViewerAccess;
   onClose: () => void;
 }
 
@@ -33,9 +39,11 @@ export function MemberProfilePanel({
   tasks,
   taskItems,
   polls,
+  access,
   onClose,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const confirm = useConfirmAction();
   const [lastMember, setLastMember] = useState<TeamMember | null>(member);
 
   // Update during render (React's recommended pattern for derived state from props).
@@ -47,19 +55,27 @@ export function MemberProfilePanel({
   const open = member !== null;
   const displayMember = member ?? lastMember;
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose],
-  );
+  // Refs, so the effect below runs only when the panel opens: onClose is a new
+  // arrow every render, and refocusing the panel on each store update or dialog
+  // close would pull focus off the control the dialog just returned it to.
+  const onCloseRef = useRef(onClose);
+  const confirmOpenRef = useRef(confirm.open);
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+    confirmOpenRef.current = confirm.open;
+  });
 
   useEffect(() => {
     if (!open) return;
     panelRef.current?.focus();
+    function handleKeyDown(e: KeyboardEvent) {
+      // Both listeners are on document, so without this one Escape would close
+      // the confirm dialog and the panel together.
+      if (e.key === "Escape" && !confirmOpenRef.current) onCloseRef.current();
+    }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, handleKeyDown]);
+  }, [open]);
 
   const memberProjects = displayMember
     ? tasks.filter((t) => t.assignedMembers.includes(displayMember.id))
@@ -100,6 +116,7 @@ export function MemberProfilePanel({
                         You
                       </span>
                     ) : null}
+                    {access?.remote ? <AccessRoleBadge role={displayMember.accessRole} /> : null}
                   </div>
                   {displayMember.isCoach ? (
                     <p className="mt-0.5 text-sm text-fg-mid">Coach</p>
@@ -144,6 +161,15 @@ export function MemberProfilePanel({
                   <p className="text-sm text-fg-dim">No roles assigned.</p>
                 )}
               </div>
+            )}
+
+            {access?.remote && (
+              <MemberAdminSection
+                member={displayMember}
+                isSelf={isSelf}
+                access={access}
+                ask={confirm.ask}
+              />
             )}
 
             {/* Projects & standalone tasks */}
@@ -220,6 +246,10 @@ export function MemberProfilePanel({
           </>
         )}
       </div>
+      {/* After the panel, not inside it: its transform would become the fixed
+          dialog's containing block and its overflow-y-auto would clip it.
+          Rendering later also stacks it above the same-z-50 panel. */}
+      {confirm.dialog}
     </>
   );
 }

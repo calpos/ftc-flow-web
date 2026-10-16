@@ -1,20 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Info, RotateCcw } from "lucide-react";
+import { Check, Info, LogOut, RotateCcw } from "lucide-react";
 import { useActiveTeam } from "@/lib/beta/ActiveTeamProvider";
 import { useApp } from "@/lib/beta/store/hooks";
 import { resetBetaData } from "@/lib/beta/storage";
 import { Avatar, Button, Card } from "../_components/ui";
 import { ResetConfirmDialog } from "@/app/beta/_components/ResetConfirmDialog";
 import { teamLabel } from "@/lib/teams/types";
+import { leaveTeamRequest } from "../_components/team-admin/leaveTeam";
+import { canLeave } from "../_components/team-admin/permissions";
+import { ProfileForm } from "../_components/team-admin/ProfileForm";
+import { useConfirmAction } from "../_components/team-admin/useConfirmAction";
+import { useViewerAccess } from "../_components/team-admin/useViewerAccess";
 
 export default function AccountPage() {
-  const { members, currentUser, currentUserId, setUser, taskItems, tasks, polls, events } =
-    useApp();
+  const {
+    members,
+    currentUser,
+    currentUserId,
+    setUser,
+    updateMember,
+    taskItems,
+    tasks,
+    polls,
+    events,
+  } = useApp();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const activeTeam = useActiveTeam();
+  const access = useViewerAccess();
+  const confirm = useConfirmAction();
 
   return (
     <div className="space-y-6">
@@ -55,6 +71,47 @@ export default function AccountPage() {
                 ))}
               </div>
             ) : null}
+          </div>
+        </Card>
+      ) : null}
+
+      {activeTeam.mode === "remote" && currentUser ? (
+        <ProfileForm
+          key={`${currentUser.id}|${currentUser.firstName}|${currentUser.lastName}|${currentUser.isCoach}|${currentUser.grade ?? ""}`}
+          member={currentUser}
+          email={activeTeam.email}
+          onSave={updateMember}
+        />
+      ) : null}
+
+      {access.remote ? (
+        <Card className="space-y-3 p-5">
+          <h2 className="text-sm font-medium">Team</h2>
+          <p className="text-sm text-fg-mid">{teamLabel(access.team)}</p>
+          <div className="border-t border-edge" />
+          <div className="pt-1">
+            <p className="mb-2 text-xs font-medium text-danger/70">Danger zone</p>
+            {canLeave(access.viewerRole, access.ownerCount) ? (
+              <Button
+                variant="danger"
+                onClick={() =>
+                  confirm.ask(
+                    leaveTeamRequest({
+                      teamId: access.teamId,
+                      userId: access.userId,
+                      teamName: access.team.name,
+                    }),
+                  )
+                }
+              >
+                <LogOut className="h-4 w-4" /> Leave team
+              </Button>
+            ) : (
+              <p className="text-sm text-fg-mid">
+                You&apos;re the only owner of {access.team.name}. Make someone else an owner from
+                Team → Members before you leave.
+              </p>
+            )}
           </div>
         </Card>
       ) : null}
@@ -101,9 +158,19 @@ export default function AccountPage() {
       <Card className="space-y-3 p-5">
         <h2 className="text-sm font-medium">About this beta</h2>
         <p className="text-sm leading-relaxed text-fg-mid">
-          This is the full FTC Flow app running locally in your browser. Everything you create
-          is stored only on this device — no account, no server. Real accounts and cloud sync
-          arrive with the production launch at beta.ftcflow.app.
+          {activeTeam.mode === "remote" ? (
+            <>
+              You&apos;re signed in, so your profile and team roster are saved to your FTC Flow
+              account and follow you across devices. This is an early beta, so expect rough
+              edges.
+            </>
+          ) : (
+            <>
+              This is the full FTC Flow app running locally in your browser. Everything you create
+              is stored only on this device — no account, no server. Real accounts and cloud sync
+              arrive with the production launch at beta.ftcflow.app.
+            </>
+          )}
         </p>
         {activeTeam.mode === "local" ? (
           <>
@@ -135,6 +202,7 @@ export default function AccountPage() {
           isResetting={isResetting}
         />
       ) : null}
+      {confirm.dialog}
     </div>
   );
 }
