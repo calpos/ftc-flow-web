@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useActiveTeam } from "@/lib/beta/ActiveTeamProvider";
 import { useApp } from "@/lib/beta/store/hooks";
 import { MOCK_TEAM_NAME, MOCK_TEAM_NUMBER } from "@/lib/beta/mocks";
 import { SegmentedTabs, TabOption } from "../_components/ui";
@@ -9,12 +10,14 @@ import { TeamMembers } from "../_components/TeamMembers";
 import { TeamProjects } from "../_components/TeamProjects";
 import { TeamTasks } from "../_components/TeamTasks";
 import { TeamPolls } from "../_components/TeamPolls";
+import { JoinCodeCard } from "../_components/team-admin/JoinCodeCard";
 
 type Tab = "members" | "projects" | "tasks" | "polls";
 const VALID: Tab[] = ["members", "projects", "tasks", "polls"];
 
 function TeamPageContent() {
   const { members, tasks, taskItems, polls } = useApp();
+  const activeTeam = useActiveTeam();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -46,14 +49,32 @@ function TeamPageContent() {
       <div className="space-y-6 lg:flex lg:items-center lg:justify-between lg:space-y-0 lg:gap-6">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Team {MOCK_TEAM_NUMBER} <span className="text-signal">{MOCK_TEAM_NAME}</span>
+            {activeTeam.mode === "remote" ? (
+              activeTeam.team.team_number !== null ? (
+                <>
+                  Team {activeTeam.team.team_number}{" "}
+                  <span className="text-signal">{activeTeam.team.name}</span>
+                </>
+              ) : (
+                <span className="text-signal">{activeTeam.team.name}</span>
+              )
+            ) : (
+              <>
+                Team {MOCK_TEAM_NUMBER} <span className="text-signal">{MOCK_TEAM_NAME}</span>
+              </>
+            )}
           </h1>
           <p className="mt-1 text-fg-mid">Members, projects, tasks, and polls in one place.</p>
         </header>
         <SegmentedTabs options={options} value={tab} onChange={handleTabChange} className="lg:shrink-0" />
       </div>
 
-      {tab === "members" ? <TeamMembers /> : null}
+      {tab === "members" ? (
+        <>
+          <JoinCodeCard />
+          <TeamMembers />
+        </>
+      ) : null}
       {tab === "projects" ? <TeamProjects /> : null}
       {tab === "tasks" ? <TeamTasks /> : null}
       {tab === "polls" ? <TeamPolls /> : null}

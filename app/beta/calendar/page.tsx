@@ -471,7 +471,7 @@ function CalendarContent() {
                 subtitle="No events, due dates, or poll closings scheduled from today onward."
                 action={{
                   label: "Add event",
-                  onClick: () => setEventDialog({ open: true, editing: null }),
+                  onClick: () => setNewEventOpen(true),
                 }}
               />
             )
@@ -516,7 +516,7 @@ function CalendarContent() {
                   label: "Show all",
                   onClick: () => {
                     setEnabled(new Set<CalKind>(["event", "project", "task", "poll"]));
-                    setSelectedDay(null);
+                    dayParam.close();
                   },
                 }}
               />

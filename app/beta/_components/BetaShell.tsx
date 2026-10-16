@@ -9,11 +9,12 @@ import { ToastRegion } from "./ToastRegion";
 import { useGotoHotkeys } from "./useGotoHotkeys";
 import { HotkeyCheatsheet } from "./HotkeyCheatsheet";
 import { CommandPalette } from "./CommandPalette";
+import type { BetaAuth } from "@/lib/auth/types";
 
 const FOCUSABLE_SELECTORS =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-export function BetaShell({ children }: { children: ReactNode }) {
+export function BetaShell({ children, auth }: { children: ReactNode; auth: BetaAuth }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useSidebarCollapsed();
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -112,7 +113,7 @@ export function BetaShell({ children }: { children: ReactNode }) {
         style={{ width: collapsed ? "4.5rem" : "16rem" }}
         className="sticky top-0 hidden h-screen shrink-0 border-r border-edge bg-surface lg:block transition-[width] duration-200 ease-in-out motion-reduce:transition-none"
       >
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} onOpenPalette={() => setPaletteOpen(true)} />
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} onOpenPalette={() => setPaletteOpen(true)} auth={auth} />
       </aside>
 
       {/* Mobile drawer — always mounted; transitions driven by menuOpen state */}
@@ -142,12 +143,21 @@ export function BetaShell({ children }: { children: ReactNode }) {
           }}
           onKeyDown={handlePanelKeyDown}
         >
-          <Sidebar onNavigate={() => setMenuOpen(false)} onOpenPalette={() => setPaletteOpen(true)} />
+          <Sidebar onNavigate={() => setMenuOpen(false)} onOpenPalette={() => setPaletteOpen(true)} auth={auth} />
         </div>
       </div>
 
       {/* Content column */}
       <div className="flex min-w-0 flex-1 flex-col">
+        {auth.kind === "demo" ? (
+          <p className="border-b border-edge bg-surface px-4 py-2 text-center text-sm text-fg-mid sm:px-6 lg:px-10">
+            Demo: data stays in this browser.{" "}
+            <Link href="/login?mode=signup" className="font-medium text-fg underline underline-offset-2 hover:text-fg-mid">
+              Create a free account
+            </Link>
+          </p>
+        ) : null}
+
         {/* Mobile top bar */}
         <header className="sticky top-0 z-50 flex items-center justify-between border-b border-edge bg-ink/90 px-4 py-3 backdrop-blur lg:hidden">
           <div className="flex items-center gap-2">
