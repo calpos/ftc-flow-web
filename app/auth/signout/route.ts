@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { isAuthGateEnabled } from "@/lib/auth/gate";
 import { createClient } from "@/lib/supabase/server";
+import { ACTIVE_TEAM_COOKIE } from "@/lib/teams/active-team";
 
 // POST only, so a link prefetch or a crawler can never sign anyone out.
 export async function POST(request: NextRequest) {
@@ -24,6 +25,9 @@ export async function POST(request: NextRequest) {
   for (const { name } of request.cookies.getAll()) {
     if (name.startsWith("sb-")) cookieStore.set(name, "", { maxAge: 0, path: "/" });
   }
+
+  // The next account to sign in here must not inherit this one's team pick.
+  cookieStore.set(ACTIVE_TEAM_COOKIE, "", { maxAge: 0, path: "/" });
 
   return NextResponse.redirect(new URL("/login", request.url), 303);
 }
