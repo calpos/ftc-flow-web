@@ -10,11 +10,38 @@ import {
 } from "@/lib/beta/types";
 import { Avatar, Card, EmptyState } from "./ui";
 import { MemberProfilePanel } from "./MemberProfilePanel";
+import { AccessRoleBadge } from "./team-admin/AccessRoleBadge";
+import { canEditMembership } from "./team-admin/permissions";
+import { useViewerAccess } from "./team-admin/useViewerAccess";
 
 export function TeamMembers() {
   const { members, currentUser, currentUserId, updateMember, tasks, taskItems, polls } = useApp();
   const isCoach = !!currentUser?.isCoach;
-  const [selectedMember, setSelectedMember] = useState(null as TeamMember | null);
+  const access = useViewerAccess();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Derived, so role changes show live and the panel closes once the member is removed.
+  const selected = members.find((m) => m.id === selectedId) ?? null;
+  // The store role only, no server fallback, so this matches membersSlice's gate.
+  const storeRole = members.find((m) => m.id === currentUserId)?.accessRole ?? null;
+
+  function rowProps(m: TeamMember) {
+    const isSelf = m.id === currentUserId;
+    if (access.remote) {
+      const canEditTitle = canEditMembership(storeRole, isSelf);
+      return {
+        isSelf,
+        canEditTitle,
+        canEditWorkRoles: canEditTitle && !m.isCoach,
+        showAccessBadge: true,
+      };
+    }
+    return {
+      isSelf,
+      canEditTitle: isCoach,
+      canEditWorkRoles: isSelf && !m.isCoach,
+      showAccessBadge: false,
+    };
+  }
 
   const ordered = useMemo(() => {
     const coaches = members.filter((m) => m.isCoach);
@@ -39,10 +66,9 @@ export function TeamMembers() {
           <MemberRow
             key={m.id}
             member={m}
-            isSelf={m.id === currentUserId}
-            viewerIsCoach={isCoach}
+            {...rowProps(m)}
             onUpdate={updateMember}
-            onRowClick={(clicked) => setSelectedMember(clicked)}
+            onRowClick={setSelectedId}
           />
         ))}
       </Card>
@@ -51,23 +77,23 @@ export function TeamMembers() {
           <Card key={m.id}>
             <MemberRow
               member={m}
-              isSelf={m.id === currentUserId}
-              viewerIsCoach={isCoach}
+              {...rowProps(m)}
               onUpdate={updateMember}
               avatarSize={48}
-              onRowClick={(clicked) => setSelectedMember(clicked)}
+              onRowClick={setSelectedId}
             />
           </Card>
         ))}
       </div>
       <MemberProfilePanel
-        member={selectedMember}
-        isSelf={selectedMember?.id === currentUserId}
+        member={selected}
+        isSelf={selected?.id === currentUserId}
         tasks={tasks}
         taskItems={taskItems}
         polls={polls}
         currentUserId={currentUserId}
-        onClose={() => setSelectedMember(null)}
+        access={access}
+        onClose={() => setSelectedId(null)}
       />
     </>
   );
@@ -76,20 +102,23 @@ export function TeamMembers() {
 function MemberRow({
   member,
   isSelf,
-  viewerIsCoach,
+  canEditTitle,
+  canEditWorkRoles,
+  showAccessBadge,
   onUpdate,
   avatarSize = 40,
   onRowClick,
 }: {
   member: TeamMember;
   isSelf: boolean;
-  viewerIsCoach: boolean;
+  canEditTitle: boolean;
+  canEditWorkRoles: boolean;
+  showAccessBadge: boolean;
   onUpdate: (m: TeamMember) => void;
   avatarSize?: number;
-  onRowClick: (m: TeamMember) => void;
+  onRowClick: (id: string) => void;
 }) {
   const [adding, setAdding] = useState(false);
-  const canEditWorkRoles = isSelf && !member.isCoach;
   const availableRoles = COMMON_WORK_ROLES.filter((r) => !member.workRoles.includes(r));
 
   function setTeamRole(role: string) {
@@ -107,7 +136,7 @@ function MemberRow({
   return (
     <div
       className="flex items-start gap-3 p-4 cursor-pointer hover:bg-raised/50 transition-colors rounded-none"
-      onClick={() => onRowClick(member)}
+      onClick={() => onRowClick(member.id)}
     >
       <Avatar member={member} size={avatarSize} />
       <div className="min-w-0 flex-1">
@@ -120,6 +149,7 @@ function MemberRow({
               You
             </span>
           ) : null}
+          {showAccessBadge ? <AccessRoleBadge role={member.accessRole} /> : null}
         </div>
 
         {member.isCoach ? (
@@ -127,7 +157,7 @@ function MemberRow({
         ) : (
           <>
             <div className="mt-0.5 flex items-center gap-2 text-sm text-fg-mid">
-              {viewerIsCoach ? (
+              {canEditTitle ? (
                 <select
                   value={member.teamRole}
                   onChange={(e) => setTeamRole(e.target.value)}
