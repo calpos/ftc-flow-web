@@ -1,3 +1,5 @@
+import type { TeamRole } from "@/lib/supabase/database.types";
+
 export interface TeamMember {
   id: string;
   firstName: string;
@@ -6,6 +8,8 @@ export interface TeamMember {
   workRoles: string[];
   grade?: string;
   isCoach: boolean;
+  /** team_members.role, the permission level. Distinct from teamRole, the display title. */
+  accessRole?: TeamRole;
 }
 
 /**
